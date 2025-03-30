@@ -1,3 +1,4 @@
+@tool
 extends EditorContextMenuPlugin
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #	script-ide: Virtual Popups
