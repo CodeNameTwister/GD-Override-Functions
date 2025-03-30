@@ -1,4 +1,10 @@
 extends EditorContextMenuPlugin
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#	script-ide: Virtual Popups
+#
+#	Virtual Popups for script-ide addon.godot 4
+#	author:	"Twister"
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 const SCENE : PackedScene = preload("res://addons/gd_override_functions/popup/virtuals_popup.tscn")
 const ICON : Texture = preload("res://addons/gd_override_functions/popup/icon/func_virtual.svg")
 

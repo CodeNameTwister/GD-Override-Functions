@@ -1,5 +1,11 @@
 @tool
 extends EditorPlugin
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#	GD Override Functions
+#
+#	Virtual Popups override functions. godot 4
+#	author:	"Twister"
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #region extension_features
 var popup_virtual_functions : RefCounted = null
 var popup_virtual_functions_code : RefCounted = null
