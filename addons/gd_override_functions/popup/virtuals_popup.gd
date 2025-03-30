@@ -285,12 +285,11 @@ func __iterate_metada(input_script : Script, funcs : PackedStringArray, metadata
 		for _func : String in funcs:
 			for meta : Dictionary in metadata:
 				if meta.name == _func:
-					print(meta.name)
 					if _write_lines(input_script, _get_full_header_virtual(meta)):
-						print('[PLUGIN] Created virtual function "', _func , '"')
+						print('[INFO] Created virtual function "', _func , '"')
 					else:
 						if Engine.is_editor_hint():
-							print('[PLUGIN] Error on create virtual function "', _func , '"')
+							print('[INFO] Error on create virtual function "', _func , '"')
 					totals += 1
 					if totals == funcs.size():
 						break
