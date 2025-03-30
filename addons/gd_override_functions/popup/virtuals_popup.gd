@@ -76,9 +76,7 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 		end = -1
 		step = -1
 
-	tree.set_column_custom_minimum_width(0, 250)
-	tree.set_column_custom_minimum_width(1, 50)
-	tree.set_column_custom_minimum_width(2, 50)
+	tree.set_column_custom_minimum_width(0, 25)
 
 	tree.set_column_title_alignment(0, HORIZONTAL_ALIGNMENT_CENTER)
 	tree.set_column_title_alignment(1, HORIZONTAL_ALIGNMENT_CENTER)
