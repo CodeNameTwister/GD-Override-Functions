@@ -277,9 +277,6 @@ func _goto_line(script_editor : ScriptEditor, index : int):
 
 	code_edit.grab_focus()
 
-func get_all_method_list(sc : Script) -> void:
-	pass
-
 func __iterate_metada(input_script : Script, funcs : PackedStringArray, metadata : Array[Dictionary], totals : int = 0) -> int:
 	if totals < funcs.size():
 		for _func : String in funcs:
