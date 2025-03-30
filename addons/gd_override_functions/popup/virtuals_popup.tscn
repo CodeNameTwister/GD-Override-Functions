@@ -1,7 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://cs744ege7je66"]
+[gd_scene load_steps=4 format=3 uid="uid://cs744ege7je66"]
 
-[ext_resource type="Script" uid="uid://dr0ybrl2ogq1s" path="res://addons/gd_override_functions/popup/virtuals_popup.gd" id="1_uwkyc"]
-[ext_resource type="Texture2D" uid="uid://da47hotbqfln3" path="res://addons/gd_override_functions/popup/icon/func_virtual.svg" id="2_iq5ej"]
+[ext_resource type="Script" uid="uid://dr0ybrl2ogq1s" path="res://addons/gd_override_functions/popup/virtuals_popup.gd" id="1_1wgbw"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iq5ej"]
 bg_color = Color(0.352765, 0.124129, 0.353458, 1)
@@ -22,7 +21,7 @@ visible = true
 transient_to_focused = true
 unresizable = false
 borderless = false
-script = ExtResource("1_uwkyc")
+script = ExtResource("1_1wgbw")
 tree = NodePath("Container/Tree")
 accept_button = NodePath("Container/FooterContainer/OkButton")
 cancel_button = NodePath("Container/FooterContainer/CancelButton")
@@ -49,7 +48,6 @@ vertical_alignment = 1
 custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_horizontal = 8
-texture = ExtResource("2_iq5ej")
 expand_mode = 1
 stretch_mode = 3
 
