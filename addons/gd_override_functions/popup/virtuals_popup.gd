@@ -294,7 +294,7 @@ func __iterate_metada(input_script : Script, funcs : PackedStringArray, metadata
 
 #region UI_CALLBACK
 func _on_accept_button(input_script : Script) -> void:
-	var item : TreeItem = tree.get_selected()
+	var item : TreeItem = tree.get_next_selected(null)
 	var funcs : PackedStringArray = []
 	var type_base : StringName = input_script.get_instance_base_type()
 
