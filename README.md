@@ -13,7 +13,18 @@ This addon allow select virtual functions for be override/implement.
 ![image_preview0](images/img0.png)
 ![image_preview1](images/img2.jpg)
 
+### Filters (V0.2.0+)
+![image_preview1](images/img3.jpg)
+
 # How Work
+## Menu Override Virtual Function
+Press RMB (Right Click Mouse Button) on the current editor script or in the script panel and select **Override Virtual Functions**.
+
+
+![example](images/img1.jpg)
+
+# Syntax Work
+
 >[!TIP]
 >As in other languages, **Virtual Functions** are those that name begin with "_" character **( not with "__" )**.
 
@@ -31,11 +42,26 @@ func __private_function(foo : Variant) -> Void:
 func public_function(foo : Variant) -> Void:
   pass
 ```
-## Menu Override Virtual Function
-Press RMB (Right Click Mouse Button) on the current editor script or in the script panel and select **Override Virtual Functions**.
 
-![example](images/img1.jpg)
+>[!TIP]
+>As in other languages, **Interface class** are those that class name begin with "I" (Upper case) character **( not with "i" )**.
 
+Syntax of Interface Class Example:
+```py
+# (OK) This is a interface.
+class_name IMyInterface extends Foo
+
+# (OK) This is a interface.
+Imy_file.gd # Yeah, files begin with "I" (upper case) too work! (class_name is not necessary if you don't want put in the script)
+
+IAnotherFile.gd # Begin with "I", that is fine!
+
+# (X) No custom interface class.
+class_name my_normal_class extends foo
+
+# (X) No custom interface class file script.
+my_file.gd
+```
 Copyrights (c) CodeNameTwister. See [LICENSE](LICENSE) for details.
 
 [godot engine]: https://godotengine.org/
