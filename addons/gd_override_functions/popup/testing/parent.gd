@@ -1,4 +1,4 @@
-extends "res://addons/gd_override_functions/popup/testing/Imy_custom_interface.gd"
+extends "res://addons/gd_override_functions/popup/testing/IMyInterface1.gd"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #	script-ide: Virtual Popups
 #
@@ -23,3 +23,9 @@ func _parent_function_2() -> void:
 ## Parameted functions
 func _parent_function_3(param0 : String = "popup-virtuals", param2 : String = "by", param3 : String = "Twister") -> int:
 	return OK
+
+func parent_public() -> void:
+	pass
+
+func __parent_private() -> void:
+	pass

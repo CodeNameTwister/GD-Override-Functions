@@ -172,10 +172,10 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 				else:
 					sub_item.set_icon_overlay(0, null)
 					sub_item.set_selectable(0, true)
-				if (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
-					sub_item.set_icon(0, ICON_VIRTUALS)
-				elif (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
+				if (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
 					sub_item.set_icon(0, ICON_PRIVATE)
+				elif (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
+					sub_item.set_icon(0, ICON_VIRTUALS)
 				else:
 					sub_item.set_icon(0, ICON_PUBLIC)
 				sub_item.set_custom_color(1, COLOR_PARAMETERS)
@@ -244,10 +244,10 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 				else:
 					sub_item.set_icon_overlay(0, null)
 					sub_item.set_selectable(0, true)
-				if (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
-					sub_item.set_icon(0, ICON_VIRTUALS)
-				elif (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
+				if (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
 					sub_item.set_icon(0, ICON_PRIVATE)
+				elif (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
+					sub_item.set_icon(0, ICON_VIRTUALS)
 				else:
 					sub_item.set_icon(0, ICON_PUBLIC)
 
