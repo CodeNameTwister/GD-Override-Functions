@@ -11,18 +11,29 @@ const CHAR_VIRTUAL_FUNCTION : String = "_"
 const CHAR_PRIVATE_FUNCTION : String = "__"
 const BUILT_IN_SCRIPT: StringName = &"::GDScript"
 
+const ICON_PUBLIC : Texture = preload("res://addons/gd_override_functions/popup/icon/func_public.png")
 const ICON_VIRTUALS : Texture = preload("res://addons/gd_override_functions/popup/icon/func_virtual.svg")
+const ICON_PRIVATE : Texture = preload("res://addons/gd_override_functions/popup/icon/func_private.png")
 const ICON_CHECKED : Texture = preload("res://addons/gd_override_functions/popup/icon/check.svg")
 
 const ICON_NATIVE_CLASS : Texture = preload("res://addons/gd_override_functions/popup/icon/Script.svg")
 const ICON_CUSTOM_CLASS : Texture = preload("res://addons/gd_override_functions/popup/icon/ScriptExtend.svg")
 const ICON_CUSTOM_SCRIPT : Texture = preload("res://addons/gd_override_functions/popup/icon/PluginScript.svg")
+const ICON_INTERFACE_SCRIPT : Texture = preload("res://addons/gd_override_functions/popup/icon/InterfaceScript.png")
 
 var COLOR_CLASS : Color = Color.DARK_SLATE_BLUE
 var COLOR_NATIVE_CLASS : Color = Color.BLACK
 var COLOR_PARAMETERS : Color = Color.BLACK
+var COLOR_INTERFACE : Color = Color.BLACK
 
 var include_paremeters : bool = false
+
+# FILTERS
+var _private_begin_equal_protected : bool = false
+var _public_filter : bool = false
+var _private_filter : bool = false
+var _protected_filter : bool = true
+var _interface_filter : bool = true
 
 enum FILTER_TYPE{
 	DEFAULT,
@@ -38,18 +49,36 @@ var test_button: Callable = _testing
 @export var accept_button : Button
 @export var cancel_button : Button
 
+# GENERATORS
+@export var interface_generate_button : Button
+
+#region filter_handler
+@export var public_button : Button
+@export var protected_button : Button
+@export var private_button : Button
+@export var interface_button : Button
+
+var _last_script : Script = null
+var _last_filter : FILTER_TYPE = FILTER_TYPE.REVERSE
+#endregion
+
 var _buffer_data : Dictionary = {}
+var _created_funcs : Dictionary = {}
 
 
 func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.REVERSE) -> void:
 	_buffer_data = {}
+	_created_funcs = {}
 	if tree == null:
 		push_error("Not defined tree!")
 		return
 
 	tree.clear()
 
-	var callback : Callable = _on_accept_button.bind(input_script)
+	_last_script = input_script
+	_last_filter = filter_type
+
+	var callback : Callable = _on_accept_button
 	if accept_button:
 		if accept_button.pressed.is_connected(_on_accept_button):
 			accept_button.pressed.disconnect(_on_accept_button)
@@ -90,7 +119,7 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 	var root : TreeItem = tree.create_item()
 	root.set_text(0, "Classes")
 
-	var created_funcs : Dictionary = _clear_funcs(input_script)
+	_created_funcs = _clear_funcs(input_script)
 
 	_buffer_data = base
 
@@ -107,13 +136,13 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 			item.set_text(0, dict["name"])
 			last = item
 
-			if dict["native"] == true:
+			if dict["type"] == 0:
 				item.set_custom_bg_color(0, COLOR_NATIVE_CLASS)
 				item.set_custom_bg_color(1, COLOR_NATIVE_CLASS)
 				item.set_custom_bg_color(2, COLOR_NATIVE_CLASS)
 				item.collapsed = true
 				item.set_icon(0, ICON_NATIVE_CLASS)
-			else:
+			elif dict["type"]  == 1:
 				item.set_custom_bg_color(0, COLOR_CLASS)
 				item.set_custom_bg_color(1, COLOR_CLASS)
 				item.set_custom_bg_color(2, COLOR_CLASS)
@@ -121,24 +150,40 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 					item.set_icon(0, ICON_CUSTOM_SCRIPT)
 				else:
 					item.set_icon(0, ICON_CUSTOM_CLASS)
+			else:
+				item.set_custom_bg_color(0, COLOR_INTERFACE)
+				item.set_custom_bg_color(1, COLOR_INTERFACE)
+				item.set_custom_bg_color(2, COLOR_INTERFACE)
+				if dict["custom"] == true:
+					item.set_icon(0, ICON_INTERFACE_SCRIPT)
+					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
+				else:
+					item.set_icon(0, ICON_INTERFACE_SCRIPT)
+					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
 			item.set_selectable(0, false)
 			item.set_selectable(1, false)
 			item.set_selectable(2, false)
 			for key : Variant in funcs.keys():
 				var sub_item : TreeItem = tree.create_item(item, -1)
 				sub_item.set_text(0, funcs[key])
-				if created_funcs.has(key):
-					sub_item.set_icon(0, ICON_CHECKED)
+				if _created_funcs.has(key):
+					sub_item.set_icon_overlay(0, ICON_CHECKED)
 					sub_item.set_selectable(0, false)
 				else:
-					sub_item.set_icon(0, ICON_VIRTUALS)
+					sub_item.set_icon_overlay(0, null)
 					sub_item.set_selectable(0, true)
+				if (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
+					sub_item.set_icon(0, ICON_VIRTUALS)
+				elif (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
+					sub_item.set_icon(0, ICON_PRIVATE)
+				else:
+					sub_item.set_icon(0, ICON_PUBLIC)
 				sub_item.set_custom_color(1, COLOR_PARAMETERS)
 				sub_item.set_custom_color(2, COLOR_PARAMETERS)
-				if sub_item.get_text(1) == "-":
-					sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
-				else:
-					sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_LEFT)
+				#if sub_item.get_text(1) == "-":
+				sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
+				#else:
+					#sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_LEFT)
 				sub_item.set_text_alignment(2,HORIZONTAL_ALIGNMENT_CENTER)
 				sub_item.set_selectable(1, false)
 				sub_item.set_selectable(2, false)
@@ -152,13 +197,13 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 			var item : TreeItem = tree.create_item(null, -1)
 
 			item.set_text(0, dict["name"])
-			if dict["native"] == true:
+			if dict["type"] == 0:
 				item.set_custom_bg_color(0, COLOR_NATIVE_CLASS)
 				item.set_custom_bg_color(1, COLOR_NATIVE_CLASS)
 				item.set_custom_bg_color(2, COLOR_NATIVE_CLASS)
 				item.collapsed = true
 				item.set_icon(0, ICON_NATIVE_CLASS)
-			else:
+			elif dict["type"]  == 1:
 				item.set_custom_bg_color(0, COLOR_CLASS)
 				item.set_custom_bg_color(1, COLOR_CLASS)
 				item.set_custom_bg_color(2, COLOR_CLASS)
@@ -166,6 +211,16 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 					item.set_icon(0, ICON_CUSTOM_SCRIPT)
 				else:
 					item.set_icon(0, ICON_CUSTOM_CLASS)
+			else:
+				item.set_custom_bg_color(0, COLOR_INTERFACE)
+				item.set_custom_bg_color(1, COLOR_INTERFACE)
+				item.set_custom_bg_color(2, COLOR_INTERFACE)
+				if dict["custom"] == true:
+					item.set_icon(0, ICON_INTERFACE_SCRIPT)
+					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
+				else:
+					item.set_icon(0, ICON_INTERFACE_SCRIPT)
+					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
 			item.set_selectable(0, false)
 			item.set_selectable(1, false)
 			item.set_selectable(2, false)
@@ -174,21 +229,27 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 				var func_name : PackedStringArray = (funcs[key] as String).split('||', false, 2)
 				for fx : int in range(0, func_name.size(), 1):
 					sub_item.set_text(fx, func_name[fx])
-				if sub_item.get_text(1) == "-":
-					sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
-				else:
-					sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_LEFT)
+				#if sub_item.get_text(1) == "-":
+				sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
+				#else:
+					#sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_LEFT)
 				sub_item.set_text_alignment(2,HORIZONTAL_ALIGNMENT_CENTER)
 				sub_item.set_selectable(1, false)
 				sub_item.set_selectable(2, false)
 				sub_item.set_custom_color(1, COLOR_PARAMETERS)
 				sub_item.set_custom_color(2, COLOR_PARAMETERS)
-				if created_funcs.has(key):
-					sub_item.set_icon(0, ICON_CHECKED)
+				if _created_funcs.has(key):
+					sub_item.set_icon_overlay(0, ICON_CHECKED)
 					sub_item.set_selectable(0, false)
 				else:
-					sub_item.set_icon(0, ICON_VIRTUALS)
+					sub_item.set_icon_overlay(0, null)
 					sub_item.set_selectable(0, true)
+				if (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
+					sub_item.set_icon(0, ICON_VIRTUALS)
+				elif (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
+					sub_item.set_icon(0, ICON_PRIVATE)
+				else:
+					sub_item.set_icon(0, ICON_PUBLIC)
 
 	if root.get_child_count() == 0:
 		root.set_text(0, "No virtual functions aviables!")
@@ -216,7 +277,115 @@ func _testing() -> void:
 	call_deferred(&"show")
 	make_tree(input_script)
 
+func _on_public_filter_pressed() -> void:
+	var root : TreeItem = tree.get_root()
+	var collapsed : Dictionary = {}
+
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			collapsed[tree_item.get_text(0)] = tree_item.collapsed
+			tree_item = tree_item.get_next()
+
+	_public_filter = !_public_filter
+	make_tree(_last_script, _last_filter)
+
+	root = tree.get_root()
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			var txt : String = str(tree_item.get_text(0))
+			if collapsed.has(txt):
+				tree_item.collapsed = collapsed[txt]
+			tree_item = tree_item.get_next()
+
+func _on_protected_filter_pressed() -> void:
+	var root : TreeItem = tree.get_root()
+	var collapsed : Dictionary = {}
+
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			collapsed[tree_item.get_text(0)] = tree_item.collapsed
+			tree_item = tree_item.get_next()
+
+	_protected_filter = !_protected_filter
+	make_tree(_last_script, _last_filter)
+
+	root = tree.get_root()
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			var txt : String = str(tree_item.get_text(0))
+			if collapsed.has(txt):
+				tree_item.collapsed = collapsed[txt]
+			tree_item = tree_item.get_next()
+
+func _on_private_filter_pressed() -> void:
+	var root : TreeItem = tree.get_root()
+	var collapsed : Dictionary = {}
+
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			collapsed[tree_item.get_text(0)] = tree_item.collapsed
+			tree_item = tree_item.get_next()
+
+	_private_filter = !_private_filter
+	make_tree(_last_script, _last_filter)
+
+	root = tree.get_root()
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			var txt : String = str(tree_item.get_text(0))
+			if collapsed.has(txt):
+				tree_item.collapsed = collapsed[txt]
+			tree_item = tree_item.get_next()
+
+func _on_interface_filter_pressed() -> void:
+	var root : TreeItem = tree.get_root()
+	var collapsed : Dictionary = {}
+
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			collapsed[tree_item.get_text(0)] = tree_item.collapsed
+			tree_item = tree_item.get_next()
+
+	_interface_filter = !_interface_filter
+	make_tree(_last_script, _last_filter)
+
+	root = tree.get_root()
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			var txt : String = str(tree_item.get_text(0))
+			if collapsed.has(txt):
+				tree_item.collapsed = collapsed[txt]
+			tree_item = tree_item.get_next()
+
+func _on_generate_interface_pressed() -> void:
+	if _buffer_data.size() == 0:
+		print("Not class aviables!")
+		return
+	var funcs : PackedStringArray = []
+	for x : Variant in _buffer_data.keys():
+		if _buffer_data[x]["type"] == 2:
+			var _class_data : Dictionary = _buffer_data[x]
+			var _funcs : Dictionary = _class_data["funcs"]
+			for _func : Variant in _funcs.keys():
+				if _created_funcs.has(_func):
+					continue
+				funcs.append(str(_func))
+			continue
+	if funcs.size() == 0:
+		print("Not has interfaces methods for override/implement!")
+		return
+	_make(funcs)
+
 func _init() -> void:
+	_private_begin_equal_protected = CHAR_PRIVATE_FUNCTION.begins_with(CHAR_VIRTUAL_FUNCTION)
 	if !is_node_ready():
 		await ready
 	assert(tree and accept_button and cancel_button)
@@ -225,16 +394,63 @@ func _init() -> void:
 	tree.multi_selected.connect(_on_tree_multi_selected)
 	cancel_button.pressed.connect(_on_cancel_button)
 
+	if public_button:
+		public_button.pressed.connect(_on_public_filter_pressed)
+	if protected_button:
+		protected_button.pressed.connect(_on_protected_filter_pressed)
+	if private_button:
+		private_button.pressed.connect(_on_private_filter_pressed)
+	if interface_button:
+		interface_button.pressed.connect(_on_interface_filter_pressed)
+	if interface_generate_button:
+		interface_generate_button.pressed.connect(_on_generate_interface_pressed)
+
 	COLOR_CLASS = COLOR_CLASS.darkened(0.4)
 	COLOR_NATIVE_CLASS = COLOR_CLASS.darkened(0.4)
 	COLOR_PARAMETERS = COLOR_CLASS.lightened(0.3)
+	COLOR_INTERFACE = COLOR_CLASS.lightened(0.2)
+
+	visibility_changed.connect(_on_change_visibility)
 
 	_update_gui()
 #endregion
 
+func _on_change_visibility() -> void:
+	if !visible:
+		_created_funcs.clear()
+		_buffer_data.clear()
+		return
+	_update_gui()
+
 func _update_gui() -> void:
 	if accept_button:
 		accept_button.disabled = tree.get_selected() == null
+
+	if public_button:
+		public_button.button_pressed = _public_filter
+
+	if protected_button:
+		protected_button.button_pressed = _protected_filter
+
+	if private_button:
+		private_button.button_pressed = _private_filter
+
+	if interface_button:
+		interface_button.button_pressed = _interface_filter
+
+	#UPDATE INTERFACE
+	if interface_generate_button:
+		interface_generate_button.disabled = true
+		if _buffer_data.size() == 0:
+			return
+		for x : Variant in _buffer_data.keys():
+			if _buffer_data[x]["type"] == 2:
+				var _class_data : Dictionary = _buffer_data[x]
+				var _funcs : Dictionary = _class_data["funcs"]
+				for _func : Variant in _funcs.keys():
+					if !_created_funcs.has(_func):
+						interface_generate_button.disabled = false
+						return
 
 func _write_lines(input_script : Script, data : String) -> bool:
 	#ONLY EDITOR MODE
@@ -293,20 +509,23 @@ func __iterate_metada(input_script : Script, funcs : PackedStringArray, metadata
 	return totals
 
 #region UI_CALLBACK
-func _on_accept_button(input_script : Script) -> void:
+func _on_accept_button() -> void:
 	var item : TreeItem = tree.get_next_selected(null)
 	var funcs : PackedStringArray = []
-	var type_base : StringName = input_script.get_instance_base_type()
 
 	while item != null:
 		var fname : String = item.get_text(0)
 		funcs.append(fname)
 		item = tree.get_next_selected(item)
 
+	_make(funcs)
+
+func _make(funcs : PackedStringArray) -> void:
+	var type_base : StringName = _last_script.get_instance_base_type()
 	if ClassDB.class_exists(type_base):
-		__iterate_metada(input_script, funcs, ClassDB.class_get_method_list(type_base), __iterate_metada(input_script, funcs, input_script.get_script_method_list(), 0))
+		__iterate_metada(_last_script, funcs, ClassDB.class_get_method_list(type_base), __iterate_metada(_last_script, funcs, _last_script.get_script_method_list(), 0))
 	else:
-		__iterate_metada(input_script, funcs, input_script.get_script_method_list(), 0)
+		__iterate_metada(_last_script, funcs, _last_script.get_script_method_list(), 0)
 	hide()
 
 func _on_cancel_button() -> void:
@@ -365,15 +584,35 @@ func _generate_native(native :  StringName, data : Dictionary, index : int = 0) 
 	var base : Dictionary = {
 		"name" : native
 		,"funcs" : funcs
-		,"native" : true
+		,"type" : 0
 		,"custom": false
 	}
 	index += 1
 	data[index] = base
 	for dict: Dictionary in ClassDB.class_get_method_list(native):
 		#region conditional
-		if dict.flags & METHOD_FLAG_VIRTUAL > 0:
-			funcs[dict.name] =_get_header_virtual(dict)
+		if _protected_filter:
+			if dict.flags & METHOD_FLAG_VIRTUAL > 0:
+				funcs[dict.name] =_get_header_virtual(dict)
+				continue
+		if _public_filter:
+			var method : StringName = dict.name
+			if _private_begin_equal_protected:
+				if !method.begins_with(CHAR_VIRTUAL_FUNCTION):
+					funcs[method] = _get_header_virtual(dict)
+					continue
+			else:
+				if !method.begins_with(CHAR_PRIVATE_FUNCTION) and !method.begins_with(CHAR_VIRTUAL_FUNCTION):
+					funcs[method] =_get_header_virtual(dict)
+					continue
+		if _private_filter:
+			var method : StringName = dict.name
+			if _private_begin_equal_protected:
+				if method.begins_with(CHAR_PRIVATE_FUNCTION):
+					funcs[method] =_get_header_virtual(dict)
+			else:
+				if method.begins_with(CHAR_PRIVATE_FUNCTION) and !method.begins_with(CHAR_VIRTUAL_FUNCTION):
+					funcs[method] =_get_header_virtual(dict)
 		#endregion
 
 	for x : int in range(0, index, 1):
@@ -391,18 +630,41 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 	var base : Dictionary = {
 		"name" : &"GDScript"
 		,"funcs" : funcs
-		,"native": false
+		,"type": 1
 		,"custom": false
 	}
 	base["name"] = _get_name(script, base)
 	index += 1
 	data[index] = base
-	for dict: Dictionary in script.get_script_method_list():
-		var func_name: StringName = dict.name
-		#region conditional
-		if (func_name.begins_with(CHAR_VIRTUAL_FUNCTION) and !func_name.begins_with(CHAR_PRIVATE_FUNCTION)) or dict.flags & METHOD_FLAG_VIRTUAL > 0:
-			funcs[func_name] = _get_header_virtual(dict)
-		#endregion
+
+	if _interface_filter and base["name"].begins_with("I"):
+		base["type"] = 2
+		for dict: Dictionary in script.get_script_method_list():
+			funcs[dict.name] = _get_header_virtual(dict)
+	else:
+		for dict: Dictionary in script.get_script_method_list():
+			var func_name: StringName = dict.name
+			#region conditional
+			if _protected_filter:
+				if (func_name.begins_with(CHAR_VIRTUAL_FUNCTION) and !func_name.begins_with(CHAR_PRIVATE_FUNCTION)) or dict.flags & METHOD_FLAG_VIRTUAL > 0:
+					funcs[func_name] = _get_header_virtual(dict)
+			if _public_filter:
+				if _private_begin_equal_protected:
+					if !func_name.begins_with(CHAR_PRIVATE_FUNCTION):
+						funcs[func_name] =_get_header_virtual(dict)
+						continue
+				else:
+					if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and !func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+						funcs[func_name] =_get_header_virtual(dict)
+						continue
+			if _private_filter:
+				if _private_begin_equal_protected:
+					if func_name.begins_with(CHAR_PRIVATE_FUNCTION):
+						funcs[func_name] =_get_header_virtual(dict)
+				else:
+					if func_name.begins_with(CHAR_PRIVATE_FUNCTION) and !func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+						funcs[func_name] =_get_header_virtual(dict)
+			#endregion
 
 	for x : int in range(0, index, 1):
 		var clazz : Dictionary = data[x]["funcs"]
@@ -421,12 +683,14 @@ func _get_header_virtual(dict : Dictionary) -> String:
 
 	for y : int in range(args.size() - 1, -1, -1):
 		var arg : Dictionary = args[y]
-		var txt : String = arg["name"]
+		var txt : String = "" #arg["name"]
 		if !(arg["class_name"]).is_empty():
-			txt += str(" : ", arg["class_name"] as String)
+			#txt += str(" : ", arg["class_name"] as String)
+			txt += str(arg["class_name"] as String)
 		else:
 			var _typeof : int = arg["type"]
-			txt += str(" : ", _get_type(_typeof))
+			#txt += str(" : ", _get_type(_typeof))
+			txt += str(_get_type(_typeof))
 		if include_paremeters and _default_index > 0:
 			_default_index -= 1
 			var def : Variant = default_args[_default_index]

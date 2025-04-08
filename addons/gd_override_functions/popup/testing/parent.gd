@@ -1,4 +1,4 @@
-extends Node
+extends "res://addons/gd_override_functions/popup/testing/Imy_custom_interface.gd"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #	script-ide: Virtual Popups
 #

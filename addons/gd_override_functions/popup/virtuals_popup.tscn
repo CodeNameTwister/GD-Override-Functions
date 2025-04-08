@@ -1,6 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://cs744ege7je66"]
+[gd_scene load_steps=9 format=3 uid="uid://cs744ege7je66"]
 
 [ext_resource type="Script" uid="uid://dr0ybrl2ogq1s" path="res://addons/gd_override_functions/popup/virtuals_popup.gd" id="1_1wgbw"]
+[ext_resource type="Texture2D" uid="uid://38kluilwkp41" path="res://addons/gd_override_functions/popup/icon/func_public.png" id="2_63hnu"]
+[ext_resource type="Texture2D" uid="uid://da47hotbqfln3" path="res://addons/gd_override_functions/popup/icon/func_virtual.svg" id="2_iq5ej"]
+[ext_resource type="StyleBox" uid="uid://3kguht0js125" path="res://addons/gd_override_functions/popup/button/pressed.tres" id="3_bpsl1"]
+[ext_resource type="Texture2D" uid="uid://cdkalydlqn631" path="res://addons/gd_override_functions/popup/icon/func_private.png" id="4_7bskm"]
+[ext_resource type="Texture2D" uid="uid://dv25xdh44bfla" path="res://addons/gd_override_functions/popup/icon/InterfaceScript.png" id="5_7bskm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iq5ej"]
 bg_color = Color(0.352765, 0.124129, 0.353458, 1)
@@ -14,9 +19,9 @@ corner_radius_top_right = 2
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_knkse"]
 bg_color = Color(0.196078, 0.392157, 0.588235, 1)
 
-[node name="Virtuals" type="PopupPanel" node_paths=PackedStringArray("tree", "accept_button", "cancel_button")]
+[node name="Virtuals" type="PopupPanel" node_paths=PackedStringArray("tree", "accept_button", "cancel_button", "interface_generate_button", "public_button", "protected_button", "private_button", "interface_button")]
 position = Vector2i(0, 36)
-size = Vector2i(346, 365)
+size = Vector2i(396, 366)
 visible = true
 transient_to_focused = true
 unresizable = false
@@ -25,12 +30,17 @@ script = ExtResource("1_1wgbw")
 tree = NodePath("Container/Tree")
 accept_button = NodePath("Container/FooterContainer/OkButton")
 cancel_button = NodePath("Container/FooterContainer/CancelButton")
+interface_generate_button = NodePath("Container/HBoxContainer/interface_generate_btn")
+public_button = NodePath("Container/HBoxContainer/public_btn")
+protected_button = NodePath("Container/HBoxContainer/protected_btn")
+private_button = NodePath("Container/HBoxContainer/private_btn")
+interface_button = NodePath("Container/HBoxContainer/interface_btn")
 
 [node name="Container" type="VBoxContainer" parent="."]
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 342.0
-offset_bottom = 361.0
+offset_right = 392.0
+offset_bottom = 362.0
 
 [node name="TittleContainer" type="PanelContainer" parent="Container"]
 custom_minimum_size = Vector2(24, 24)
@@ -50,6 +60,74 @@ layout_mode = 2
 size_flags_horizontal = 8
 expand_mode = 1
 stretch_mode = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Container"]
+layout_mode = 2
+
+[node name="interface_generate_btn" type="Button" parent="Container/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Implement all interface methods."
+text = "Generate"
+icon = ExtResource("5_7bskm")
+
+[node name="Label" type="Label" parent="Container/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "Filters Methods"
+
+[node name="public_btn" type="Button" parent="Container/HBoxContainer"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+tooltip_text = "Public methods.
+
+Example:
+func public_method()"
+theme_override_font_sizes/font_size = 16
+theme_override_styles/pressed = ExtResource("3_bpsl1")
+toggle_mode = true
+button_pressed = true
+icon = ExtResource("2_63hnu")
+icon_alignment = 1
+expand_icon = true
+
+[node name="protected_btn" type="Button" parent="Container/HBoxContainer"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+tooltip_text = "Protected/Virtual Methods.
+
+Example:
+func _virtual_method()"
+theme_override_styles/pressed = ExtResource("3_bpsl1")
+toggle_mode = true
+icon = ExtResource("2_iq5ej")
+icon_alignment = 1
+expand_icon = true
+
+[node name="private_btn" type="Button" parent="Container/HBoxContainer"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+tooltip_text = "Private Methods.
+
+Example:
+func __private_method()"
+theme_override_styles/pressed = ExtResource("3_bpsl1")
+toggle_mode = true
+icon = ExtResource("4_7bskm")
+icon_alignment = 1
+expand_icon = true
+
+[node name="interface_btn" type="Button" parent="Container/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Interfaces.
+This include all interface methods.
+
+Interfaces are the \"custom classes\" begin with \"I\" character.
+
+Example:
+class_name IClass"
+theme_override_styles/pressed = ExtResource("3_bpsl1")
+toggle_mode = true
+icon = ExtResource("5_7bskm")
 
 [node name="Tree" type="Tree" parent="Container"]
 custom_minimum_size = Vector2(128, 256)
