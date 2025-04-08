@@ -653,7 +653,7 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 					funcs[func_name] = _get_header_virtual(dict)
 			if _public_filter:
 				if _private_begin_equal_protected:
-					if !func_name.begins_with(CHAR_PRIVATE_FUNCTION):
+					if !func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
 						funcs[func_name] =_get_header_virtual(dict)
 						continue
 				else:
