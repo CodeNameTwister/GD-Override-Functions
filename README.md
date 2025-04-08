@@ -25,10 +25,10 @@ Press RMB (Right Click Mouse Button) on the current editor script or in the scri
 
 # Syntax Work
 
+Syntax of Virtual Function Example:
 >[!TIP]
 >As in other languages, **Virtual Functions** are those that name begin with "_" character **( not with "__" that is for private functions)**.
 
-Syntax of Virtual Function Example:
 ```python
 # (OK) This is a virtual function.
 func _virtual_function(foo : Variant) -> Void:
@@ -43,10 +43,9 @@ func public_function(foo : Variant) -> Void:
   pass
 ```
 
+Syntax of Interface Class Example:
 >[!TIP]
 >As in other languages, **Interface class** are those that class name begin with "I" (Upper case) character **( not with "i" )**.
-
-Syntax of Interface Class Example:
 ```py
 # (OK) This is a interface.
 class_name IMyInterface extends Foo
@@ -62,6 +61,9 @@ class_name my_normal_class extends foo
 # (X) No custom interface class file script.
 my_file.gd
 ```
+>[!NOTE]
+>Native classes were excluded because they could be confused with interfaces.
+
 Copyrights (c) CodeNameTwister. See [LICENSE](LICENSE) for details.
 
 [godot engine]: https://godotengine.org/
