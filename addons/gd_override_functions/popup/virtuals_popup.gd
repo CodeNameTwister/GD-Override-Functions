@@ -637,8 +637,11 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 	index += 1
 	data[index] = base
 
-	if _interface_filter and base["name"].begins_with("I"):
+	if base["name"].begins_with("I"):
 		base["type"] = 2
+
+	if _interface_filter and base["type"] == 2:
+		#SHOW ALL
 		for dict: Dictionary in script.get_script_method_list():
 			funcs[dict.name] = _get_header_virtual(dict)
 	else:
