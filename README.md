@@ -4,7 +4,7 @@ Tool Addon for godot 4 for extend script editor feature.
 [![Godot Engine 4.3](https://img.shields.io/badge/Godot_Engine-4.x-blue)](https://godotengine.org/) ![ToolHack](https://img.shields.io/badge/Tool-Addon-green) ![Copyrights License](https://img.shields.io/badge/License-MIT-blue)
 
 
-This addon allow select virtual functions for be override/implement.
+This addon allow select **public / virtual / private** functions for be override/implement.
 
 >[!NOTE]
 >This plugin was initially created to be an complement to the [script-ide](https://godotengine.org/asset-library/asset/2206) plugin, this version is a **STANDALONE** version of the complement.
@@ -17,8 +17,8 @@ This addon allow select virtual functions for be override/implement.
 ![image_preview1](images/img3.jpg)
 
 # How Work
-## Menu Override Virtual Function
-Press RMB (Right Click Mouse Button) on the current editor script or in the script panel and select **Override Virtual Functions**.
+## Menu Override Function
+Press RMB (Right Click Mouse Button) on the current editor script or in the script panel and select **Override Functions**.
 
 
 ![example](images/img1.jpg)
@@ -26,7 +26,7 @@ Press RMB (Right Click Mouse Button) on the current editor script or in the scri
 # Syntax Work
 
 >[!TIP]
->As in other languages, **Virtual Functions** are those that name begin with "_" character **( not with "__" )**.
+>As in other languages, **Virtual Functions** are those that name begin with "_" character **( not with "__" that is for private functions)**.
 
 Syntax of Virtual Function Example:
 ```python
