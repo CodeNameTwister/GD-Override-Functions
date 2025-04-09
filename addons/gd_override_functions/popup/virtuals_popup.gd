@@ -464,7 +464,8 @@ func _write_lines(_class_name : String, func_name : String, input_script : Scrip
 		return false
 
 	var comment : String = "Override {0} {1} function."
-	var type : String = "public"
+	#var type : String = "public" #too much message
+	var type : String = ""
 
 	if is_interface:
 		comment = "Implement {0} {1} function."
