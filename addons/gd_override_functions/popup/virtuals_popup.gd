@@ -255,6 +255,8 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 		root.set_text(0, "No virtual functions aviables!")
 		tree.hide_root = false
 
+	_update_gui()
+
 ## Generate tree data, @output Array(base class data, total bases inherited class])
 func generate_data(script : Script) -> Array:
 	var data_base : Dictionary = {}
@@ -420,7 +422,6 @@ func _on_change_visibility() -> void:
 		_created_funcs.clear()
 		_buffer_data.clear()
 		return
-	_update_gui()
 
 func _update_gui() -> void:
 	if accept_button:
