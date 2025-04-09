@@ -463,17 +463,16 @@ func _write_lines(_class_name : String, func_name : String, input_script : Scrip
 		print(data)
 		return false
 
-	var comment : String = "Override {0} {1} function."
-	#var type : String = "public" #too much message
-	var type : String = ""
+	var comment : String = "Override {0} {1}."
+	var type : String = "function"
 
 	if is_interface:
-		comment = "Implement {0} {1} function."
+		comment = "Implement {0} {1}."
 
 	if func_name.begins_with(CHAR_PRIVATE_FUNCTION):
-		type = "private"
+		type = "private function"
 	elif func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
-		type = "virtual"
+		type = "virtual function"
 
 	var script_editor: ScriptEditor = EditorInterface.get_script_editor()
 	var scripts : Array[Script] = script_editor.get_open_scripts()
