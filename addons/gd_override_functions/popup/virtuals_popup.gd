@@ -252,7 +252,7 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 					sub_item.set_icon(0, ICON_PUBLIC)
 
 	if root.get_child_count() == 0:
-		root.set_text(0, "No virtual functions aviables!")
+		root.set_text(0, "No functions aviables!")
 		tree.hide_root = false
 
 	_update_gui()
@@ -371,7 +371,7 @@ func _on_generate_interface_pressed() -> void:
 	if _buffer_data.size() == 0:
 		print("Not class aviables!")
 		return
-	var funcs : PackedStringArray = []
+	var funcs : Dictionary = {}
 	for x : Variant in _buffer_data.keys():
 		if _buffer_data[x]["type"] == 2:
 			var _class_data : Dictionary = _buffer_data[x]
@@ -379,7 +379,11 @@ func _on_generate_interface_pressed() -> void:
 			for _func : Variant in _funcs.keys():
 				if _created_funcs.has(_func):
 					continue
-				funcs.append(str(_func))
+				funcs[_func] = {
+					"type" : _class_data["type"]
+					,"class" :_class_data["name"]
+					,"name" : str(_func)
+					}
 			continue
 	if funcs.size() == 0:
 		print("Not has interfaces methods for override/implement!")
@@ -453,13 +457,22 @@ func _update_gui() -> void:
 						interface_generate_button.disabled = false
 						return
 
-func _write_lines(input_script : Script, data : String) -> bool:
+func _write_lines(_class_name : String, func_name : String, input_script : Script, data : String, is_interface : bool = false) -> bool:
 	#ONLY EDITOR MODE
 	if !Engine.is_editor_hint():
 		print(data)
 		return false
 
-	const COMMENT : String = '\n#Override virtual function'
+	var comment : String = "Override {0} {1} function."
+	var type : String = "public"
+
+	if is_interface:
+		comment = "Implement {0} {1} function."
+
+	if func_name.begins_with(CHAR_PRIVATE_FUNCTION):
+		type = "private"
+	elif func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+		type = "virtual"
 
 	var script_editor: ScriptEditor = EditorInterface.get_script_editor()
 	var scripts : Array[Script] = script_editor.get_open_scripts()
@@ -477,7 +490,10 @@ func _write_lines(input_script : Script, data : String) -> bool:
 		return false
 
 	edit = scripts_editor[iscript].get_base_editor()
-	edit.text += str("\n", COMMENT,"\n", data)
+	if edit.text.ends_with("\n"):
+		edit.text += str("\n#", comment.format([_class_name,type]),"\n", data)
+	else:
+		edit.text += str("\n\n#", comment.format([_class_name,type]),"\n", data)
 
 	_goto_line(script_editor, edit.get_line_count() - 1)
 	return true
@@ -494,16 +510,29 @@ func _goto_line(script_editor : ScriptEditor, index : int):
 
 	code_edit.grab_focus()
 
-func __iterate_metada(input_script : Script, funcs : PackedStringArray, metadata : Array[Dictionary], totals : int = 0) -> int:
+func __iterate_metada(input_script : Script, funcs : Dictionary, metadata : Array[Dictionary], totals : int = 0) -> int:
 	if totals < funcs.size():
-		for _func : String in funcs:
+		for key : Variant in funcs.keys():
+			var data : Dictionary = funcs[key]
+			var class_type : int = data["type"]
+			var _class_name : String = data["class"]
+			var _func : String = data["name"]
+
+			var is_interface : bool = class_type == 2
+
 			for meta : Dictionary in metadata:
 				if meta.name == _func:
-					if _write_lines(input_script, _get_full_header_virtual(meta)):
-						print('[INFO] Created virtual function "', _func , '"')
+					if _write_lines(_class_name, _func, input_script, _get_full_header_virtual(meta), is_interface):
+						if is_interface:
+							print('[INFO] Created "{0}.{1}" interface function'.format([_class_name, _func]))
+						else:
+							print('[INFO] Created "{0}.{1}" function'.format([_class_name, _func]))
 					else:
 						if Engine.is_editor_hint():
-							print('[INFO] Error on create virtual function "', _func , '"')
+							if is_interface:
+								print('[INFO] Error on create "{0}.{1}" interface function!'.format([_class_name, _func]))
+							else:
+								print('[INFO] Error on create "{0}.{1}" function!'.format([_class_name, _func]))
 					totals += 1
 					if totals == funcs.size():
 						break
@@ -512,16 +541,27 @@ func __iterate_metada(input_script : Script, funcs : PackedStringArray, metadata
 #region UI_CALLBACK
 func _on_accept_button() -> void:
 	var item : TreeItem = tree.get_next_selected(null)
-	var funcs : PackedStringArray = []
+	var funcs : Dictionary = {}
 
 	while item != null:
+		var parent : String = item.get_parent().get_text(0)
 		var fname : String = item.get_text(0)
-		funcs.append(fname)
+
+		for x : Variant in _buffer_data.keys():
+			if _buffer_data[x]["name"] == parent:
+				var _class_data : Dictionary = _buffer_data[x]
+				var _funcs : Dictionary = _class_data["funcs"]
+				if _funcs.has(fname):
+					funcs[fname] = {
+						"type" : _class_data["type"]
+						,"class" :_class_data["name"]
+						,"name" : fname
+						}
 		item = tree.get_next_selected(item)
 
 	_make(funcs)
 
-func _make(funcs : PackedStringArray) -> void:
+func _make(funcs : Dictionary) -> void:
 	var type_base : StringName = _last_script.get_instance_base_type()
 	if ClassDB.class_exists(type_base):
 		__iterate_metada(_last_script, funcs, ClassDB.class_get_method_list(type_base), __iterate_metada(_last_script, funcs, _last_script.get_script_method_list(), 0))
@@ -715,13 +755,14 @@ func _get_header_virtual(dict : Dictionary) -> String:
 
 	var return_dic : Dictionary = dict["return"]
 	var return_type : String = "void"
+
 	if !return_dic["class_name"].is_empty():
 		return_type = (return_dic["class_name"] as String)
 	else:
 		var _type : int = return_dic["type"]
 		if _type < 1:
 			var func_name : String = str(dict["name"]).to_lower()
-			if func_name.begins_with("_get") or func_name.contains("_get_") or func_name.ends_with("_get"):
+			if func_name == "get" or func_name.begins_with("_get") or func_name.contains("_get_") or func_name.ends_with("_get"):
 				return_type = "Variant"
 			else:
 				return_type = "void"
@@ -775,7 +816,7 @@ func _get_full_header_virtual(dict : Dictionary) -> String:
 		var _type : int = return_dic["type"]
 		if _type < 1:
 			var func_name : String = str(dict["name"]).to_lower()
-			if func_name.begins_with("_get") or func_name.contains("_get_") or func_name.ends_with("_get"):
+			if func_name == "get" or func_name.begins_with("_get") or func_name.contains("_get_") or func_name.ends_with("_get"):
 				return_type = "Variant"
 				return_value = "return null"
 			else:
