@@ -15,3 +15,8 @@ func _custom_protected_function(example_param_0 : int = true) -> bool:
 
 func __custom_private_function() -> Object:
 	return null
+
+#Implement IMyInterface2 function.
+func custom_public_function_2(example_param_0 : Object) -> void:
+	#TODO: code here :)
+	pass
