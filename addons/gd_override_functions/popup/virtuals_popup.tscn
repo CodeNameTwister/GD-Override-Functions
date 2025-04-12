@@ -20,8 +20,9 @@ corner_radius_top_right = 2
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_knkse"]
 bg_color = Color(0.196078, 0.392157, 0.588235, 1)
 
-[node name="Virtuals" type="PopupPanel" node_paths=PackedStringArray("tree", "accept_button", "cancel_button", "check_generate_at_line", "interface_generate_button", "order_button", "public_button", "protected_button", "private_button", "interface_button")]
+[node name="Virtuals" type="PopupPanel" node_paths=PackedStringArray("tree", "accept_button", "cancel_button", "check_generate_at_line", "interface_generate_button", "virtual_generate_button", "order_button", "public_button", "protected_button", "private_button", "interface_button")]
 title = "GD Override Functions"
+position = Vector2i(0, 36)
 size = Vector2i(512, 512)
 visible = true
 transient_to_focused = true
@@ -33,6 +34,7 @@ accept_button = NodePath("Container/FooterContainer/OkButton")
 cancel_button = NodePath("Container/FooterContainer/CancelButton")
 check_generate_at_line = NodePath("Container/CheckConfig0")
 interface_generate_button = NodePath("Container/HBoxContainer/interface_generate_btn")
+virtual_generate_button = NodePath("Container/HBoxContainer/virtual_generate_btn")
 order_button = NodePath("Container/HBoxContainer/order")
 public_button = NodePath("Container/HBoxContainer/public_btn")
 protected_button = NodePath("Container/HBoxContainer/protected_btn")
@@ -72,6 +74,15 @@ layout_mode = 2
 tooltip_text = "Order by class inherited."
 text = "Order"
 icon = ExtResource("2_1udd6")
+
+[node name="virtual_generate_btn" type="Button" parent="Container/HBoxContainer"]
+layout_mode = 2
+tooltip_text = "Implement all custom virtual methods.
+
+(Only custom virtuals methods!)"
+disabled = true
+text = "Generate"
+icon = ExtResource("2_iq5ej")
 
 [node name="interface_generate_btn" type="Button" parent="Container/HBoxContainer"]
 layout_mode = 2
@@ -166,7 +177,6 @@ select_mode = 2
 
 [node name="CheckConfig0" type="CheckBox" parent="Container"]
 layout_mode = 2
-button_pressed = true
 text = "Generate at end of line"
 
 [node name="FooterContainer" type="HBoxContainer" parent="Container"]

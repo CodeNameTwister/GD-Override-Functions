@@ -56,6 +56,7 @@ var test_button: Callable = _testing
 
 # GENERATORS
 @export var interface_generate_button : Button
+@export var virtual_generate_button : Button
 
 #region order
 @export var order_button : Button
@@ -417,6 +418,31 @@ func _on_interface_filter_pressed() -> void:
 				tree_item.collapsed = collapsed[txt]
 			tree_item = tree_item.get_next()
 
+
+func _on_generate_virtual_pressed() -> void:
+	if _buffer_data.size() == 0:
+		print("Not class aviables!")
+		return
+	var funcs : Dictionary = {}
+	for x : Variant in _buffer_data.keys():
+		if _buffer_data[x]["type"] > 0:
+			var _class_data : Dictionary = _buffer_data[x]
+			var _funcs : Dictionary = _class_data["funcs"]
+			for _func : Variant in _funcs.keys():
+				var func_name : String = str(_func)
+				if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+					if _created_funcs.has(_func):
+						continue
+					funcs[_func] = {
+						"type" : _class_data["type"]
+						,"class" :_class_data["name"]
+						,"name" : str(_func)
+						}
+	if funcs.size() == 0:
+		print("Not has virtual methods for override/implement!")
+		return
+	_make(funcs)
+
 func _on_generate_interface_pressed() -> void:
 	if _buffer_data.size() == 0:
 		print("Not class aviables!")
@@ -463,6 +489,8 @@ func _init() -> void:
 		interface_button.pressed.connect(_on_interface_filter_pressed)
 	if interface_generate_button:
 		interface_generate_button.pressed.connect(_on_generate_interface_pressed)
+	if virtual_generate_button:
+		virtual_generate_button.pressed.connect(_on_generate_virtual_pressed)
 
 	if order_button:
 		order_button.pressed.connect(_on_change_order_pressed)
@@ -543,6 +571,23 @@ func _update_gui() -> void:
 		check_generate_at_line.button_pressed = _generate_at_end_line
 
 	#UPDATE INTERFACE
+	if virtual_generate_button:
+		virtual_generate_button.disabled = true
+		if _buffer_data.size() > 0:
+			for x : Variant in _buffer_data.keys():
+				if _buffer_data[x]["type"] > 0:
+					var _class_data : Dictionary = _buffer_data[x]
+					var _funcs : Dictionary = _class_data["funcs"]
+					for _func : Variant in _funcs.keys():
+						var func_name : String = str(_func)
+						if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+							if !_created_funcs.has(_func):
+								virtual_generate_button.disabled = false
+								break
+					if !virtual_generate_button.disabled:
+						break
+
+	#UPDATE INTERFACE
 	if interface_generate_button:
 		interface_generate_button.disabled = true
 		if _buffer_data.size() == 0:
@@ -598,7 +643,6 @@ func _write_lines(_class_name : String, func_name : String, input_script : Scrip
 			break
 		if line > -1:
 			var line_to : int = -1
-			var bad_line : bool = false
 			while line < edit.get_line_count():
 				var ctxline : String = edit.get_line(line)
 				if ctxline.length() > 0:
@@ -817,7 +861,7 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 	index += 1
 	data[index] = base
 
-	if base["name"].begins_with("I"):
+	if base["name"].begins_with("I"):# or base["name"].to_lower().ends_with("interface"):
 		base["type"] = 2
 
 	if _interface_filter and base["type"] == 2:
