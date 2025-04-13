@@ -21,6 +21,9 @@ const ICON_CUSTOM_CLASS : Texture = preload("res://addons/gd_override_functions/
 const ICON_CUSTOM_SCRIPT : Texture = preload("res://addons/gd_override_functions/popup/icon/PluginScript.svg")
 const ICON_INTERFACE_SCRIPT : Texture = preload("res://addons/gd_override_functions/popup/icon/InterfaceScript.png")
 
+const ICON_ORDER_DEFAULT : Texture = preload("res://addons/gd_override_functions/popup/icon/default.png")
+const ICON_ORDER_INVERT : Texture = preload("res://addons/gd_override_functions/popup/icon/invert.png")
+
 var COLOR_CLASS : Color = Color.DARK_SLATE_BLUE
 var COLOR_NATIVE_CLASS : Color = Color.BLACK
 var COLOR_PARAMETERS : Color = Color.BLACK
@@ -49,8 +52,15 @@ var test_button: Callable = _testing
 @export var accept_button : Button
 @export var cancel_button : Button
 
+@export var check_generate_at_line : CheckBox
+
 # GENERATORS
 @export var interface_generate_button : Button
+@export var virtual_generate_button : Button
+
+#region order
+@export var order_button : Button
+#endregion
 
 #region filter_handler
 @export var public_button : Button
@@ -65,8 +75,9 @@ var _last_filter : FILTER_TYPE = FILTER_TYPE.REVERSE
 var _buffer_data : Dictionary = {}
 var _created_funcs : Dictionary = {}
 
+var _generate_at_end_line : bool = true
 
-func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.REVERSE) -> void:
+func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) -> void:
 	_buffer_data = {}
 	_created_funcs = {}
 	if tree == null:
@@ -92,7 +103,6 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 		input_script = input_script.duplicate()
 
 	var output : Array = generate_data(input_script)
-	#var current : Dictionary = output[0]
 	var base : Dictionary = output[0]
 	var base_count : int = output[1]
 
@@ -156,16 +166,22 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 				item.set_custom_bg_color(2, COLOR_INTERFACE)
 				if dict["custom"] == true:
 					item.set_icon(0, ICON_INTERFACE_SCRIPT)
-					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
 				else:
 					item.set_icon(0, ICON_INTERFACE_SCRIPT)
-					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
 			item.set_selectable(0, false)
 			item.set_selectable(1, false)
 			item.set_selectable(2, false)
 			for key : Variant in funcs.keys():
 				var sub_item : TreeItem = tree.create_item(item, -1)
-				sub_item.set_text(0, funcs[key])
+				var func_name : PackedStringArray = (funcs[key] as String).split('||', false, 2)
+				for fx : int in range(0, func_name.size(), 1):
+					sub_item.set_text(fx, func_name[fx])
+				sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
+				sub_item.set_text_alignment(2,HORIZONTAL_ALIGNMENT_CENTER)
+				sub_item.set_selectable(1, false)
+				sub_item.set_selectable(2, false)
+				sub_item.set_custom_color(1, COLOR_PARAMETERS)
+				sub_item.set_custom_color(2, COLOR_PARAMETERS)
 				if _created_funcs.has(key):
 					sub_item.set_icon_overlay(0, ICON_CHECKED)
 					sub_item.set_selectable(0, false)
@@ -178,15 +194,6 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 					sub_item.set_icon(0, ICON_VIRTUALS)
 				else:
 					sub_item.set_icon(0, ICON_PUBLIC)
-				sub_item.set_custom_color(1, COLOR_PARAMETERS)
-				sub_item.set_custom_color(2, COLOR_PARAMETERS)
-				#if sub_item.get_text(1) == "-":
-				sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
-				#else:
-					#sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_LEFT)
-				sub_item.set_text_alignment(2,HORIZONTAL_ALIGNMENT_CENTER)
-				sub_item.set_selectable(1, false)
-				sub_item.set_selectable(2, false)
 	else:
 		for x : int in range(start, end, step):
 			var dict : Dictionary = base[x]
@@ -217,10 +224,8 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 				item.set_custom_bg_color(2, COLOR_INTERFACE)
 				if dict["custom"] == true:
 					item.set_icon(0, ICON_INTERFACE_SCRIPT)
-					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
 				else:
 					item.set_icon(0, ICON_INTERFACE_SCRIPT)
-					#item.set_icon_overlay(0, ICON_INTERFACE_SCRIPT)
 			item.set_selectable(0, false)
 			item.set_selectable(1, false)
 			item.set_selectable(2, false)
@@ -229,10 +234,7 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = FILTER_TYPE.RE
 				var func_name : PackedStringArray = (funcs[key] as String).split('||', false, 2)
 				for fx : int in range(0, func_name.size(), 1):
 					sub_item.set_text(fx, func_name[fx])
-				#if sub_item.get_text(1) == "-":
 				sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_CENTER)
-				#else:
-					#sub_item.set_text_alignment(1,HORIZONTAL_ALIGNMENT_LEFT)
 				sub_item.set_text_alignment(2,HORIZONTAL_ALIGNMENT_CENTER)
 				sub_item.set_selectable(1, false)
 				sub_item.set_selectable(2, false)
@@ -263,6 +265,18 @@ func generate_data(script : Script) -> Array:
 	var base_count : int = _generate_native(script.get_instance_base_type(), data_base, _generate(script.get_base_script(), data_base))
 	return [data_base, base_count]
 
+func _on_settings_change() -> void:
+	var editor : EditorSettings = EditorInterface.get_editor_settings()
+	var changes : PackedStringArray = editor.get_changed_settings()
+	if "plugin/gd_override_functions/generate_at_end_line" in changes:
+		_generate_at_end_line = editor.get_setting("plugin/gd_override_functions/generate_at_end_line")
+	if "plugin/gd_override_functions/order_inverted" in changes:
+		var inverted : bool = editor.get_setting("plugin/gd_override_functions/order_inverted")
+		if inverted:
+			_last_filter = FILTER_TYPE.REVERSE
+		else:
+			_last_filter = FILTER_TYPE.DEFAULT
+
 #region init
 func _ready() -> void:
 	if !Engine.is_editor_hint():
@@ -277,7 +291,44 @@ func _testing() -> void:
 
 	#Show popup
 	call_deferred(&"show")
-	make_tree(input_script)
+	make_tree(input_script, _last_filter)
+
+func _on_change_order_pressed() -> void:
+	match _last_filter:
+		#FILTER_TYPE.REVERSE:
+			#_last_filter = FILTER_TYPE.DEFAULT
+		#FILTER_TYPE.DEFAULT:
+			#_last_filter = FILTER_TYPE.REVERSE_TREE
+		#FILTER_TYPE.REVERSE_TREE:
+			##_last_filter = FILTER_TYPE.DEFAUL_TREE
+		#FILTER_TYPE.DEFAUL_TREE:
+			#_last_filter = FILTER_TYPE.REVERSE
+		FILTER_TYPE.REVERSE:
+			_last_filter = FILTER_TYPE.DEFAULT
+		FILTER_TYPE.DEFAULT:
+			_last_filter = FILTER_TYPE.REVERSE
+		_:
+			_last_filter = FILTER_TYPE.REVERSE
+	var root : TreeItem = tree.get_root()
+	var collapsed : Dictionary = {}
+
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			collapsed[tree_item.get_text(0)] = tree_item.collapsed
+			tree_item = tree_item.get_next()
+
+	make_tree(_last_script, _last_filter)
+	root = tree.get_root()
+
+	if root:
+		var tree_item : TreeItem = root.get_first_child()
+		while null != tree_item:
+			var txt : String = str(tree_item.get_text(0))
+			if collapsed.has(txt):
+				tree_item.collapsed = collapsed[txt]
+			tree_item = tree_item.get_next()
+
 
 func _on_public_filter_pressed() -> void:
 	var root : TreeItem = tree.get_root()
@@ -367,6 +418,31 @@ func _on_interface_filter_pressed() -> void:
 				tree_item.collapsed = collapsed[txt]
 			tree_item = tree_item.get_next()
 
+
+func _on_generate_virtual_pressed() -> void:
+	if _buffer_data.size() == 0:
+		print("Not class aviables!")
+		return
+	var funcs : Dictionary = {}
+	for x : Variant in _buffer_data.keys():
+		if _buffer_data[x]["type"] > 0:
+			var _class_data : Dictionary = _buffer_data[x]
+			var _funcs : Dictionary = _class_data["funcs"]
+			for _func : Variant in _funcs.keys():
+				var func_name : String = str(_func)
+				if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+					if _created_funcs.has(_func):
+						continue
+					funcs[_func] = {
+						"type" : _class_data["type"]
+						,"class" :_class_data["name"]
+						,"name" : str(_func)
+						}
+	if funcs.size() == 0:
+		print("Not has virtual methods for override/implement!")
+		return
+	_make(funcs)
+
 func _on_generate_interface_pressed() -> void:
 	if _buffer_data.size() == 0:
 		print("Not class aviables!")
@@ -390,6 +466,9 @@ func _on_generate_interface_pressed() -> void:
 		return
 	_make(funcs)
 
+func _on_check_generate_at_line(toggled : bool) -> void:
+	_generate_at_end_line = toggled
+
 func _init() -> void:
 	_private_begin_equal_protected = CHAR_PRIVATE_FUNCTION.begins_with(CHAR_VIRTUAL_FUNCTION)
 	if !is_node_ready():
@@ -410,6 +489,14 @@ func _init() -> void:
 		interface_button.pressed.connect(_on_interface_filter_pressed)
 	if interface_generate_button:
 		interface_generate_button.pressed.connect(_on_generate_interface_pressed)
+	if virtual_generate_button:
+		virtual_generate_button.pressed.connect(_on_generate_virtual_pressed)
+
+	if order_button:
+		order_button.pressed.connect(_on_change_order_pressed)
+
+	if check_generate_at_line:
+		check_generate_at_line.toggled.connect(_on_check_generate_at_line)
 
 	COLOR_CLASS = COLOR_CLASS.darkened(0.4)
 	COLOR_NATIVE_CLASS = COLOR_CLASS.darkened(0.4)
@@ -418,6 +505,32 @@ func _init() -> void:
 
 	visibility_changed.connect(_on_change_visibility)
 
+
+	var editor : EditorSettings = EditorInterface.get_editor_settings()
+	if !editor.has_setting("plugin/gd_override_functions/generate_at_end_line"):
+		editor.set_setting("plugin/gd_override_functions/generate_at_end_line", _generate_at_end_line)
+		editor.add_property_info({
+			 "name": "plugin/gd_override_functions/generate_at_end_line",
+			"type" : TYPE_BOOL
+		})
+	else:
+		_generate_at_end_line = editor.get_setting("plugin/gd_override_functions/generate_at_end_line")
+
+	if !editor.has_setting("plugin/gd_override_functions/order_inverted"):
+		editor.set_setting("plugin/gd_override_functions/order_inverted", _last_filter == FILTER_TYPE.REVERSE)
+		editor.add_property_info({
+			 "name": "plugin/gd_override_functions/order_inverted",
+			"type" : TYPE_BOOL
+		})
+	else:
+		var inverted : bool = editor.get_setting("plugin/gd_override_functions/order_inverted")
+		if inverted:
+			_last_filter = FILTER_TYPE.REVERSE
+		else:
+			_last_filter = FILTER_TYPE.DEFAULT
+
+	editor.settings_changed.connect(_on_settings_change)
+
 	_update_gui()
 #endregion
 
@@ -425,6 +538,11 @@ func _on_change_visibility() -> void:
 	if !visible:
 		_created_funcs.clear()
 		_buffer_data.clear()
+
+		var editor : EditorSettings = EditorInterface.get_editor_settings()
+		editor.set_setting("plugin/gd_override_functions/generate_at_end_line", _generate_at_end_line)
+		editor.set_setting("plugin/gd_override_functions/order_inverted", _last_filter == FILTER_TYPE.REVERSE)
+
 		return
 
 func _update_gui() -> void:
@@ -442,6 +560,32 @@ func _update_gui() -> void:
 
 	if interface_button:
 		interface_button.button_pressed = _interface_filter
+
+	if order_button:
+		if _last_filter == FILTER_TYPE.DEFAULT or _last_filter == FILTER_TYPE.DEFAUL_TREE:
+			order_button.icon = ICON_ORDER_INVERT
+		else:
+			order_button.icon = ICON_ORDER_DEFAULT
+
+	if check_generate_at_line:
+		check_generate_at_line.button_pressed = _generate_at_end_line
+
+	#UPDATE INTERFACE
+	if virtual_generate_button:
+		virtual_generate_button.disabled = true
+		if _buffer_data.size() > 0:
+			for x : Variant in _buffer_data.keys():
+				if _buffer_data[x]["type"] > 0:
+					var _class_data : Dictionary = _buffer_data[x]
+					var _funcs : Dictionary = _class_data["funcs"]
+					for _func : Variant in _funcs.keys():
+						var func_name : String = str(_func)
+						if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+							if !_created_funcs.has(_func):
+								virtual_generate_button.disabled = false
+								break
+					if !virtual_generate_button.disabled:
+						break
 
 	#UPDATE INTERFACE
 	if interface_generate_button:
@@ -490,11 +634,50 @@ func _write_lines(_class_name : String, func_name : String, input_script : Scrip
 		return false
 
 	edit = scripts_editor[iscript].get_base_editor()
-	if edit.text.ends_with("\n"):
-		edit.text += str("\n#", comment.format([_class_name,type]),"\n", data)
-	else:
-		edit.text += str("\n\n#", comment.format([_class_name,type]),"\n", data)
 
+	var new_line : String = str("#", comment.format([_class_name,type]),"\n", data)
+	if !_generate_at_end_line and edit.get_caret_count() > 0:
+		var line : int = -1
+		for x : int in edit.get_caret_count():
+			line = edit.get_caret_line(x)
+			break
+		if line > -1:
+			var line_to : int = -1
+			while line < edit.get_line_count():
+				var ctxline : String = edit.get_line(line)
+				if ctxline.length() > 0:
+					if ctxline.begins_with(" ") or ctxline.begins_with("\t"):
+						if !ctxline.strip_edges().is_empty():
+							line_to = -1
+						else:
+							line_to = line
+					else:
+						if line_to == -1:
+							line_to = line
+						break
+				else:
+					if line_to == -1:
+						line_to = line
+				line += 1
+			if line_to > -1 and line_to != edit.get_line_count() - 1:
+				if line_to > 1:
+					if !(edit.get_line(line_to - 1).strip_edges().is_empty()):
+						new_line = str('\n', new_line)
+				if line_to < edit.get_line_count() - 1:
+					if !(edit.get_line(line_to + 1).strip_edges().is_empty()):
+						new_line = str(new_line, '\n')
+				var ctx : String = edit.get_line(line_to)
+				if !ctx.strip_edges().is_empty():
+					edit.set_line(line_to, new_line+'\n'+edit.get_line(line_to))
+				else:
+					edit.set_line(line_to, new_line)
+				_goto_line(script_editor, line_to)
+				return true
+
+	if edit.text.ends_with("\n"):
+		edit.text += str("\n", new_line)
+	else:
+		edit.text += str("\n\n", new_line)
 	_goto_line(script_editor, edit.get_line_count() - 1)
 	return true
 
@@ -678,7 +861,7 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 	index += 1
 	data[index] = base
 
-	if base["name"].begins_with("I"):
+	if base["name"].begins_with("I"):# or base["name"].to_lower().ends_with("interface"):
 		base["type"] = 2
 
 	if _interface_filter and base["type"] == 2:
@@ -729,11 +912,9 @@ func _get_header_virtual(dict : Dictionary) -> String:
 		var arg : Dictionary = args[y]
 		var txt : String = "" #arg["name"]
 		if !(arg["class_name"]).is_empty():
-			#txt += str(" : ", arg["class_name"] as String)
 			txt += str(arg["class_name"] as String)
 		else:
 			var _typeof : int = arg["type"]
-			#txt += str(" : ", _get_type(_typeof))
 			txt += str(_get_type(_typeof))
 		if include_paremeters and _default_index > 0:
 			_default_index -= 1
