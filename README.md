@@ -11,9 +11,6 @@ This addon allow select **public / virtual / private** functions for be override
 
 # Preview
 ![image_preview0](images/img0.png)
-![image_preview1](images/img2.jpg)
-
-### Filters (V0.2.0+)
 ![image_preview1](images/img3.jpg)
 
 # How Work
