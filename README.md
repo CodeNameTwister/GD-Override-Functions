@@ -4,7 +4,7 @@ Tool Addon for godot 4 for extend script editor feature.
 [![Godot Engine 4.3](https://img.shields.io/badge/Godot_Engine-4.x-blue)](https://godotengine.org/) ![ToolHack](https://img.shields.io/badge/Tool-Addon-green) ![Copyrights License](https://img.shields.io/badge/License-MIT-blue)
 
 
-This addon allow select **public / virtual / private** functions for be override/implement.
+This addon allow select **virtual** functions for be override/implement. (Also public / private functions using filters!)
 
 >[!NOTE]
 >This plugin was initially created to be an complement to the [script-ide](https://godotengine.org/asset-library/asset/2206) plugin, this version is a **STANDALONE** version of the complement.
