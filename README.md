@@ -43,6 +43,12 @@ func public_function(foo : Variant) -> Void:
 Syntax of Interface Class Example:
 >[!TIP]
 >As in other languages, **Interface class** are those that class name begin with "I" (Upper case) character **( not with "i" )**.
+
+>[!NOTE]
+> in version >= 0.2.4 you can set what are virtual/private functions in Editor settings > Plugin > GD-Override-Functions
+>
+>(Remember **advance options** must be enabled!)
+
 ```py
 # (OK) This is a interface.
 class_name IMyInterface extends Foo
