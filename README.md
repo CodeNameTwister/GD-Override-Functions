@@ -26,6 +26,10 @@ Syntax of Virtual Function Example:
 >[!TIP]
 >As in other languages, **Virtual Functions** are those that name begin with "_" character **( not with "__" that is for private functions)**.
 
+>[!NOTE]
+> in version >= 0.2.4 you can set what are virtual/private functions in Editor settings > Plugin > GD-Override-Functions
+>
+>(Remember **advance options** must be enabled!)
 ```python
 # (OK) This is a virtual function.
 func _virtual_function(foo : Variant) -> Void:
@@ -45,7 +49,7 @@ Syntax of Interface Class Example:
 >As in other languages, **Interface class** are those that class name begin with "I" (Upper case) character **( not with "i" )**.
 
 >[!NOTE]
-> in version >= 0.2.4 you can set what are virtual/private functions in Editor settings > Plugin > GD-Override-Functions
+> in version >= 0.2.4 you can set what are interface class in Editor settings > Plugin > GD-Override-Functions
 >
 >(Remember **advance options** must be enabled!)
 
