@@ -20,3 +20,7 @@ func __custom_private_function() -> Object:
 func custom_public_function_2(example_param_0 : Object) -> void:
 	#TODO: code here :)
 	pass
+
+func _custom_virtual_function_3(example_param_0 : Object) -> void:
+	#TODO: code here :)
+	pass

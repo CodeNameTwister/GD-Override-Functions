@@ -78,7 +78,6 @@ icon = ExtResource("2_1udd6")
 [node name="virtual_generate_btn" type="Button" parent="Container/HBoxContainer"]
 layout_mode = 2
 tooltip_text = "Implement all custom virtual methods.
-
 (Only custom virtuals methods!)"
 disabled = true
 text = "Generate"
@@ -177,6 +176,7 @@ select_mode = 2
 
 [node name="CheckConfig0" type="CheckBox" parent="Container"]
 layout_mode = 2
+button_pressed = true
 text = "Generate at end of line"
 
 [node name="FooterContainer" type="HBoxContainer" parent="Container"]

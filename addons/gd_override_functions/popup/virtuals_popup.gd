@@ -7,14 +7,13 @@ extends Popup
 #	author:	"Twister"
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-const CHAR_VIRTUAL_FUNCTION : String = "_"
-const CHAR_PRIVATE_FUNCTION : String = "__"
-const BUILT_IN_SCRIPT: StringName = &"::GDScript"
+const BUILT_IN_SCRIPT: String = "::GDScript"
 
 const ICON_PUBLIC : Texture = preload("res://addons/gd_override_functions/popup/icon/func_public.png")
 const ICON_VIRTUALS : Texture = preload("res://addons/gd_override_functions/popup/icon/func_virtual.svg")
 const ICON_PRIVATE : Texture = preload("res://addons/gd_override_functions/popup/icon/func_private.png")
 const ICON_CHECKED : Texture = preload("res://addons/gd_override_functions/popup/icon/check.svg")
+#const ICON_WARNING : Texture = preload("res://addons/gd_override_functions/popup/icon/warning.png")
 
 const ICON_NATIVE_CLASS : Texture = preload("res://addons/gd_override_functions/popup/icon/Script.svg")
 const ICON_CUSTOM_CLASS : Texture = preload("res://addons/gd_override_functions/popup/icon/ScriptExtend.svg")
@@ -77,6 +76,39 @@ var _created_funcs : Dictionary = {}
 
 var _generate_at_end_line : bool = true
 
+#region _USER_CONFIG_
+## Class name chars in the begin for identify a class as interface
+var _interface_begins_with : String = "I"
+## Class name chars in the end for identify a class as interface.
+var _interface_end_with : String = "Interface"
+## Ignore Upper/Lower case of class name.
+var _interface_ignore_case : bool = true
+## Function name in the begin for identify function as virtual.
+var _char_virtual_function : String = "_"
+## Function name in the end for identify function as virtual.
+var _char_private_function : String = "__"
+#endregion
+
+func _update_settings() -> void:
+	var editor : EditorSettings = EditorInterface.get_editor_settings()
+	if null == editor:
+		return
+		
+	if editor.has_setting("plugin/gd_override_functions/interface/class_as_interface_if_begins_with"):
+		_interface_begins_with = editor.get_setting("plugin/gd_override_functions/interface/class_as_interface_if_begins_with")
+	if editor.has_setting("plugin/gd_override_functions/interface/class_as_interface_if_end_with"):
+		_interface_end_with = editor.get_setting("plugin/gd_override_functions/interface/class_as_interface_if_end_with")
+	if editor.has_setting("plugin/gd_override_functions/interface/class_interface_name_ignore_case"):
+		_interface_ignore_case = editor.get_setting("plugin/gd_override_functions/interface/class_interface_name_ignore_case")
+	if editor.has_setting("plugin/gd_override_functions/inheritance/virtual_functions_begins_with"):
+		_char_virtual_function = editor.get_setting("plugin/gd_override_functions/inheritance/virtual_functions_begins_with")
+	if editor.has_setting("plugin/gd_override_functions/inheritance/private_functions_begins_with"):
+		_char_private_function = editor.get_setting("plugin/gd_override_functions/inheritance/private_functions_begins_with")
+	
+	if _interface_ignore_case:
+		_interface_end_with = _interface_end_with.to_lower()
+		_interface_begins_with = _interface_begins_with.to_lower()
+
 func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) -> void:
 	_buffer_data = {}
 	_created_funcs = {}
@@ -85,6 +117,8 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 		return
 
 	tree.clear()
+	
+	_update_settings()
 
 	_last_script = input_script
 	_last_filter = filter_type
@@ -167,7 +201,7 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 				if dict["custom"] == true:
 					item.set_icon(0, ICON_INTERFACE_SCRIPT)
 				else:
-					item.set_icon(0, ICON_INTERFACE_SCRIPT)
+					item.set_icon(0, ICON_INTERFACE_SCRIPT) #NOTNATIVE4NOW
 			item.set_selectable(0, false)
 			item.set_selectable(1, false)
 			item.set_selectable(2, false)
@@ -186,11 +220,14 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 					sub_item.set_icon_overlay(0, ICON_CHECKED)
 					sub_item.set_selectable(0, false)
 				else:
+					#if dict["type"] == 2 and !override.has(key):
+						#sub_item.set_icon_overlay(0, ICON_WARNING)
+					#else:
 					sub_item.set_icon_overlay(0, null)
 					sub_item.set_selectable(0, true)
-				if (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
+				if (key as String).begins_with(_char_private_function):
 					sub_item.set_icon(0, ICON_PRIVATE)
-				elif (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
+				elif (key as String).begins_with(_char_virtual_function):
 					sub_item.set_icon(0, ICON_VIRTUALS)
 				else:
 					sub_item.set_icon(0, ICON_PUBLIC)
@@ -225,7 +262,7 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 				if dict["custom"] == true:
 					item.set_icon(0, ICON_INTERFACE_SCRIPT)
 				else:
-					item.set_icon(0, ICON_INTERFACE_SCRIPT)
+					item.set_icon(0, ICON_INTERFACE_SCRIPT) #NOTNATIVE4NOW
 			item.set_selectable(0, false)
 			item.set_selectable(1, false)
 			item.set_selectable(2, false)
@@ -244,11 +281,14 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 					sub_item.set_icon_overlay(0, ICON_CHECKED)
 					sub_item.set_selectable(0, false)
 				else:
+					#if dict["type"] == 2 and !override.has(key):
+						#sub_item.set_icon_overlay(0, ICON_WARNING)
+					#else:
 					sub_item.set_icon_overlay(0, null)
 					sub_item.set_selectable(0, true)
-				if (key as String).begins_with(CHAR_PRIVATE_FUNCTION):
+				if (key as String).begins_with(_char_private_function):
 					sub_item.set_icon(0, ICON_PRIVATE)
-				elif (key as String).begins_with(CHAR_VIRTUAL_FUNCTION):
+				elif (key as String).begins_with(_char_virtual_function):
 					sub_item.set_icon(0, ICON_VIRTUALS)
 				else:
 					sub_item.set_icon(0, ICON_PUBLIC)
@@ -430,7 +470,7 @@ func _on_generate_virtual_pressed() -> void:
 			var _funcs : Dictionary = _class_data["funcs"]
 			for _func : Variant in _funcs.keys():
 				var func_name : String = str(_func)
-				if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+				if !func_name.begins_with(_char_private_function) and func_name.begins_with(_char_virtual_function):
 					if _created_funcs.has(_func):
 						continue
 					funcs[_func] = {
@@ -470,7 +510,7 @@ func _on_check_generate_at_line(toggled : bool) -> void:
 	_generate_at_end_line = toggled
 
 func _init() -> void:
-	_private_begin_equal_protected = CHAR_PRIVATE_FUNCTION.begins_with(CHAR_VIRTUAL_FUNCTION)
+	_private_begin_equal_protected = _char_private_function.begins_with(_char_virtual_function)
 	if !is_node_ready():
 		await ready
 	assert(tree and accept_button and cancel_button)
@@ -528,7 +568,19 @@ func _init() -> void:
 			_last_filter = FILTER_TYPE.REVERSE
 		else:
 			_last_filter = FILTER_TYPE.DEFAULT
-
+			
+	if !editor.has_setting("plugin/gd_override_functions/inheritance/virtual_functions_begins_with"):
+		editor.set_setting("plugin/gd_override_functions/inheritance/virtual_functions_begins_with", _char_virtual_function)
+	if !editor.has_setting("plugin/gd_override_functions/inheritance/private_functions_begins_with"):
+		editor.set_setting("plugin/gd_override_functions/inheritance/private_functions_begins_with", _char_private_function)
+		
+	if !editor.has_setting("plugin/gd_override_functions/interface/class_as_interface_if_begins_with"):
+		editor.set_setting("plugin/gd_override_functions/interface/class_as_interface_if_begins_with", _interface_begins_with)
+	if !editor.has_setting("plugin/gd_override_functions/interface/class_as_interface_if_end_with"):
+		editor.set_setting("plugin/gd_override_functions/interface/class_as_interface_if_end_with", _interface_end_with)
+	if !editor.has_setting("plugin/gd_override_functions/interface/class_interface_name_ignore_case"):
+		editor.set_setting("plugin/gd_override_functions/interface/class_interface_name_ignore_case", false)
+	
 	editor.settings_changed.connect(_on_settings_change)
 
 	_update_gui()
@@ -580,7 +632,7 @@ func _update_gui() -> void:
 					var _funcs : Dictionary = _class_data["funcs"]
 					for _func : Variant in _funcs.keys():
 						var func_name : String = str(_func)
-						if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+						if !func_name.begins_with(_char_private_function) and func_name.begins_with(_char_virtual_function):
 							if !_created_funcs.has(_func):
 								virtual_generate_button.disabled = false
 								break
@@ -613,9 +665,9 @@ func _write_lines(_class_name : String, func_name : String, input_script : Scrip
 	if is_interface:
 		comment = "Implement {0} {1}."
 
-	if func_name.begins_with(CHAR_PRIVATE_FUNCTION):
+	if func_name.begins_with(_char_private_function):
 		type = "private function"
-	elif func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+	elif func_name.begins_with(_char_virtual_function):
 		type = "virtual function"
 
 	var script_editor: ScriptEditor = EditorInterface.get_script_editor()
@@ -822,20 +874,20 @@ func _generate_native(native :  StringName, data : Dictionary, index : int = 0) 
 		if _public_filter:
 			var method : StringName = dict.name
 			if _private_begin_equal_protected:
-				if !method.begins_with(CHAR_VIRTUAL_FUNCTION):
+				if !method.begins_with(_char_virtual_function):
 					funcs[method] = _get_header_virtual(dict)
 					continue
 			else:
-				if !method.begins_with(CHAR_PRIVATE_FUNCTION) and !method.begins_with(CHAR_VIRTUAL_FUNCTION):
+				if !method.begins_with(_char_private_function) and !method.begins_with(_char_virtual_function):
 					funcs[method] =_get_header_virtual(dict)
 					continue
 		if _private_filter:
 			var method : StringName = dict.name
 			if _private_begin_equal_protected:
-				if method.begins_with(CHAR_PRIVATE_FUNCTION):
+				if method.begins_with(_char_private_function):
 					funcs[method] =_get_header_virtual(dict)
 			else:
-				if method.begins_with(CHAR_PRIVATE_FUNCTION) and !method.begins_with(CHAR_VIRTUAL_FUNCTION):
+				if method.begins_with(_char_private_function) and !method.begins_with(_char_virtual_function):
 					funcs[method] =_get_header_virtual(dict)
 		#endregion
 
@@ -857,11 +909,16 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 		,"type": 1
 		,"custom": false
 	}
-	base["name"] = _get_name(script, base)
+	var base_name : String = _get_name(script, base)
+	base["name"] = base_name
 	index += 1
 	data[index] = base
 
-	if base["name"].begins_with("I"):# or base["name"].to_lower().ends_with("interface"):
+	if _interface_ignore_case:
+		base_name = base_name.to_lower()
+		
+	if (!_interface_begins_with.is_empty() and base_name.begins_with(_interface_begins_with)) or \
+	(!_interface_end_with.is_empty() and base_name.ends_with(_interface_end_with)):
 		base["type"] = 2
 
 	if _interface_filter and base["type"] == 2:
@@ -873,23 +930,23 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 			var func_name: StringName = dict.name
 			#region conditional
 			if _protected_filter:
-				if (func_name.begins_with(CHAR_VIRTUAL_FUNCTION) and !func_name.begins_with(CHAR_PRIVATE_FUNCTION)) or dict.flags & METHOD_FLAG_VIRTUAL > 0:
+				if (func_name.begins_with(_char_virtual_function) and !func_name.begins_with(_char_private_function)) or dict.flags & METHOD_FLAG_VIRTUAL > 0:
 					funcs[func_name] = _get_header_virtual(dict)
 			if _public_filter:
 				if _private_begin_equal_protected:
-					if !func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+					if !func_name.begins_with(_char_virtual_function):
 						funcs[func_name] =_get_header_virtual(dict)
 						continue
 				else:
-					if !func_name.begins_with(CHAR_PRIVATE_FUNCTION) and !func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+					if !func_name.begins_with(_char_private_function) and !func_name.begins_with(_char_virtual_function):
 						funcs[func_name] =_get_header_virtual(dict)
 						continue
 			if _private_filter:
 				if _private_begin_equal_protected:
-					if func_name.begins_with(CHAR_PRIVATE_FUNCTION):
+					if func_name.begins_with(_char_private_function):
 						funcs[func_name] =_get_header_virtual(dict)
 				else:
-					if func_name.begins_with(CHAR_PRIVATE_FUNCTION) and !func_name.begins_with(CHAR_VIRTUAL_FUNCTION):
+					if func_name.begins_with(_char_private_function) and !func_name.begins_with(_char_virtual_function):
 						funcs[func_name] =_get_header_virtual(dict)
 			#endregion
 
@@ -898,8 +955,14 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 		for k : Variant in funcs.keys():
 			if clazz.has(k):
 				clazz.erase(k)
-
 	return _generate(script.get_base_script(), data, index)
+
+func __is_variant(func_name : String) -> bool:
+	const FUNC_GET : Array[String] = ["get_", "_get"]
+	for x : String in FUNC_GET:
+		if func_name.begins_with(x) or func_name.ends_with(x):
+			return true
+	return func_name.contains("_get_")
 
 func _get_header_virtual(dict : Dictionary) -> String:
 	var params : String = ""
@@ -943,7 +1006,7 @@ func _get_header_virtual(dict : Dictionary) -> String:
 		var _type : int = return_dic["type"]
 		if _type < 1:
 			var func_name : String = str(dict["name"]).to_lower()
-			if func_name == "get" or func_name.begins_with("_get") or func_name.contains("_get_") or func_name.ends_with("_get"):
+			if func_name == "get" or __is_variant(func_name):
 				return_type = "Variant"
 			else:
 				return_type = "void"
@@ -997,7 +1060,7 @@ func _get_full_header_virtual(dict : Dictionary) -> String:
 		var _type : int = return_dic["type"]
 		if _type < 1:
 			var func_name : String = str(dict["name"]).to_lower()
-			if func_name == "get" or func_name.begins_with("_get") or func_name.contains("_get_") or func_name.ends_with("_get"):
+			if func_name == "get" or __is_variant(func_name):
 				return_type = "Variant"
 				return_value = "return null"
 			else:
