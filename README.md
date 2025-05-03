@@ -13,6 +13,13 @@ This addon allow select **virtual** functions for be override/implement. (Also p
 ![image_preview0](images/img0.png)
 ![image_preview1](images/img3.jpg)
 
+# Features
+* Show/Select Function for be override.
+* Filters buttons for SHOW/HIDE Virtuals/Public/Private and Interface Functions.
+* Identify Class as Interfaces for be override. (Customizable in Editor Settings)
+* Virtual/Interface Functions Auto Generators using Buttons.
+* Plugin Settings in Editor Settings (Editor Settings > Plugin > GD Override Functions [Advance options enabled is required!])
+
 # How Work
 ## Menu Override Function
 Press RMB (Right Click Mouse Button) on the current editor script or in the script panel and select **Override Functions**.
