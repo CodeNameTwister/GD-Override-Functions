@@ -45,7 +45,7 @@ func callback(input : Object) -> void:
 		virtual_popup.set(&"name", &"_VPOPUP_")
 		root.add_child(virtual_popup)
 	virtual_popup.make_tree(input_script)
-	virtual_popup.popup_centered()
+	virtual_popup.popup_centered.call_deferred()
 
 func _popup_menu(_paths : PackedStringArray) -> void:
 	add_context_menu_item("Override Virtual Functions", callback, ICON)

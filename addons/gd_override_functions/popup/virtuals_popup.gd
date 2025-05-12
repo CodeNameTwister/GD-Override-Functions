@@ -87,6 +87,8 @@ var _interface_ignore_case : bool = true
 var _char_virtual_function : String = "_"
 ## Function name in the end for identify function as virtual.
 var _char_private_function : String = "__"
+## Include native class like IMyClass, MyClassInterface.
+var _include_native_class_for_check_interfaces : bool = false
 #endregion
 
 func _update_settings() -> void:
@@ -104,7 +106,8 @@ func _update_settings() -> void:
 		_char_virtual_function = editor.get_setting("plugin/gd_override_functions/inheritance/virtual_functions_begins_with")
 	if editor.has_setting("plugin/gd_override_functions/inheritance/private_functions_begins_with"):
 		_char_private_function = editor.get_setting("plugin/gd_override_functions/inheritance/private_functions_begins_with")
-	
+	if editor.has_setting("plugin/gd_override_functions/inheritance/include_native_class_for_check_interfaces"):
+		_include_native_class_for_check_interfaces = editor.get_setting("plugin/gd_override_functions/inheritance/include_native_class_for_check_interfaces")
 	if _interface_ignore_case:
 		_interface_end_with = _interface_end_with.to_lower()
 		_interface_begins_with = _interface_begins_with.to_lower()
@@ -194,6 +197,12 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 					item.set_icon(0, ICON_CUSTOM_SCRIPT)
 				else:
 					item.set_icon(0, ICON_CUSTOM_CLASS)
+			elif dict["type"] == 3:
+				item.set_custom_bg_color(0, COLOR_NATIVE_CLASS)
+				item.set_custom_bg_color(1, COLOR_NATIVE_CLASS)
+				item.set_custom_bg_color(2, COLOR_NATIVE_CLASS)
+				item.collapsed = true
+				item.set_icon(0, ICON_INTERFACE_SCRIPT)
 			else:
 				item.set_custom_bg_color(0, COLOR_INTERFACE)
 				item.set_custom_bg_color(1, COLOR_INTERFACE)
@@ -255,6 +264,12 @@ func make_tree(input_script : Script, filter_type : FILTER_TYPE = _last_filter) 
 					item.set_icon(0, ICON_CUSTOM_SCRIPT)
 				else:
 					item.set_icon(0, ICON_CUSTOM_CLASS)
+			elif dict["type"] == 3:
+				item.set_custom_bg_color(0, COLOR_NATIVE_CLASS)
+				item.set_custom_bg_color(1, COLOR_NATIVE_CLASS)
+				item.set_custom_bg_color(2, COLOR_NATIVE_CLASS)
+				item.collapsed = true
+				item.set_icon(0, ICON_INTERFACE_SCRIPT)
 			else:
 				item.set_custom_bg_color(0, COLOR_INTERFACE)
 				item.set_custom_bg_color(1, COLOR_INTERFACE)
@@ -580,6 +595,8 @@ func _init() -> void:
 		editor.set_setting("plugin/gd_override_functions/interface/class_as_interface_if_end_with", _interface_end_with)
 	if !editor.has_setting("plugin/gd_override_functions/interface/class_interface_name_ignore_case"):
 		editor.set_setting("plugin/gd_override_functions/interface/class_interface_name_ignore_case", false)
+	if !editor.has_setting("plugin/gd_override_functions/inheritance/include_native_class_for_check_interfaces"):
+		editor.set_setting("plugin/gd_override_functions/inheritance/include_native_class_for_check_interfaces", _include_native_class_for_check_interfaces)
 	
 	editor.settings_changed.connect(_on_settings_change)
 
@@ -645,7 +662,7 @@ func _update_gui() -> void:
 		if _buffer_data.size() == 0:
 			return
 		for x : Variant in _buffer_data.keys():
-			if _buffer_data[x]["type"] == 2:
+			if _buffer_data[x]["type"] > 1:
 				var _class_data : Dictionary = _buffer_data[x]
 				var _funcs : Dictionary = _class_data["funcs"]
 				for _func : Variant in _funcs.keys():
@@ -745,7 +762,7 @@ func _goto_line(script_editor : ScriptEditor, index : int):
 
 	code_edit.grab_focus()
 
-func __iterate_metada(input_script : Script, funcs : Dictionary, metadata : Array[Dictionary], totals : int = 0) -> int:
+func __iterate_metada(buffer : PackedStringArray, input_script : Script, funcs : Dictionary, metadata : Array[Dictionary], totals : int = 0) -> int:
 	if totals < funcs.size():
 		for key : Variant in funcs.keys():
 			var data : Dictionary = funcs[key]
@@ -757,6 +774,9 @@ func __iterate_metada(input_script : Script, funcs : Dictionary, metadata : Arra
 
 			for meta : Dictionary in metadata:
 				if meta.name == _func:
+					if _func in buffer:
+						continue
+					buffer.append(_func)
 					if _write_lines(_class_name, _func, input_script, _get_full_header_virtual(meta), is_interface):
 						if is_interface:
 							print('[INFO] Created "{0}.{1}" interface function'.format([_class_name, _func]))
@@ -798,10 +818,11 @@ func _on_accept_button() -> void:
 
 func _make(funcs : Dictionary) -> void:
 	var type_base : StringName = _last_script.get_instance_base_type()
+	var buffer : PackedStringArray = []
 	if ClassDB.class_exists(type_base):
-		__iterate_metada(_last_script, funcs, ClassDB.class_get_method_list(type_base), __iterate_metada(_last_script, funcs, _last_script.get_script_method_list(), 0))
+		__iterate_metada(buffer, _last_script, funcs, ClassDB.class_get_method_list(type_base), __iterate_metada(buffer, _last_script, funcs, _last_script.get_script_method_list(), 0),)
 	else:
-		__iterate_metada(_last_script, funcs, _last_script.get_script_method_list(), 0)
+		__iterate_metada(buffer, _last_script, funcs, _last_script.get_script_method_list(), 0)
 	hide()
 
 func _on_cancel_button() -> void:
@@ -865,31 +886,45 @@ func _generate_native(native :  StringName, data : Dictionary, index : int = 0) 
 	}
 	index += 1
 	data[index] = base
-	for dict: Dictionary in ClassDB.class_get_method_list(native):
-		#region conditional
-		if _protected_filter:
-			if dict.flags & METHOD_FLAG_VIRTUAL > 0:
-				funcs[dict.name] =_get_header_virtual(dict)
-				continue
-		if _public_filter:
-			var method : StringName = dict.name
-			if _private_begin_equal_protected:
-				if !method.begins_with(_char_virtual_function):
-					funcs[method] = _get_header_virtual(dict)
+	
+	if _include_native_class_for_check_interfaces:
+		var base_name : String = native
+		if _interface_ignore_case:
+			base_name = base_name.to_lower()
+		if (!_interface_begins_with.is_empty() and base_name.begins_with(_interface_begins_with)) or \
+		(!_interface_end_with.is_empty() and base_name.ends_with(_interface_end_with)):
+			base["type"] = 3
+	
+	if _interface_filter and base["type"] == 3:
+		#SHOW ALL
+		for dict: Dictionary in ClassDB.class_get_method_list(native):
+			funcs[dict.name] = _get_header_virtual(dict)
+	else:
+		for dict: Dictionary in ClassDB.class_get_method_list(native):
+			#region conditional
+			if _protected_filter:
+				if dict.flags & METHOD_FLAG_VIRTUAL > 0:
+					funcs[dict.name] =_get_header_virtual(dict)
 					continue
-			else:
-				if !method.begins_with(_char_private_function) and !method.begins_with(_char_virtual_function):
-					funcs[method] =_get_header_virtual(dict)
-					continue
-		if _private_filter:
-			var method : StringName = dict.name
-			if _private_begin_equal_protected:
-				if method.begins_with(_char_private_function):
-					funcs[method] =_get_header_virtual(dict)
-			else:
-				if method.begins_with(_char_private_function) and !method.begins_with(_char_virtual_function):
-					funcs[method] =_get_header_virtual(dict)
-		#endregion
+			if _public_filter:
+				var method : StringName = dict.name
+				if _private_begin_equal_protected:
+					if !method.begins_with(_char_virtual_function):
+						funcs[method] = _get_header_virtual(dict)
+						continue
+				else:
+					if !method.begins_with(_char_private_function) and !method.begins_with(_char_virtual_function):
+						funcs[method] =_get_header_virtual(dict)
+						continue
+			if _private_filter:
+				var method : StringName = dict.name
+				if _private_begin_equal_protected:
+					if method.begins_with(_char_private_function):
+						funcs[method] =_get_header_virtual(dict)
+				else:
+					if method.begins_with(_char_private_function) and !method.begins_with(_char_virtual_function):
+						funcs[method] =_get_header_virtual(dict)
+			#endregion
 
 	for x : int in range(0, index, 1):
 		var clazz : Dictionary = data[x]["funcs"]
@@ -924,10 +959,12 @@ func _generate(script : Script, data : Dictionary, index : int = -1) -> int:
 	if _interface_filter and base["type"] == 2:
 		#SHOW ALL
 		for dict: Dictionary in script.get_script_method_list():
+			if dict.name.begins_with("@"):continue
 			funcs[dict.name] = _get_header_virtual(dict)
 	else:
 		for dict: Dictionary in script.get_script_method_list():
 			var func_name: StringName = dict.name
+			if func_name.begins_with("@"):continue
 			#region conditional
 			if _protected_filter:
 				if (func_name.begins_with(_char_virtual_function) and !func_name.begins_with(_char_private_function)) or dict.flags & METHOD_FLAG_VIRTUAL > 0:

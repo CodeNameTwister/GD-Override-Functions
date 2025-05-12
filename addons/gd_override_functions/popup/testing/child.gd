@@ -20,7 +20,7 @@ func _custom_protected_function(example_param_0 : int = 1) -> bool:
 	return false
 
 #Implement IMyInterface1 private function.
-func __custom_private_function() -> Object:
+func __custom_virtual_function() -> Object:
 	#TODO: code here :)
 	return null
 

@@ -22,7 +22,7 @@ bg_color = Color(0.196078, 0.392157, 0.588235, 1)
 
 [node name="Virtuals" type="PopupPanel" node_paths=PackedStringArray("tree", "accept_button", "cancel_button", "check_generate_at_line", "interface_generate_button", "virtual_generate_button", "order_button", "public_button", "protected_button", "private_button", "interface_button")]
 title = "GD Override Functions"
-position = Vector2i(0, 36)
+initial_position = 4
 size = Vector2i(512, 512)
 visible = true
 transient_to_focused = true

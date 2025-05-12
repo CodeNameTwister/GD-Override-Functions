@@ -8,7 +8,7 @@ extends "res://addons/gd_override_functions/popup/testing/IMyInterface1.gd"
 
 ## Also work with custom classes (You know, using class_name yeah)
 
-## Parameted functions
+## Parameted functions 	
 func _parent_function_0(param0 : int, param1 : String = "HelloGodotWorld", param2 : bool = true) -> bool:
 	return true
 
