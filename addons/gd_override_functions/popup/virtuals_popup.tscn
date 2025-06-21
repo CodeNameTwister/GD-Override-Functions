@@ -23,7 +23,7 @@ bg_color = Color(0.196078, 0.392157, 0.588235, 1)
 [node name="Virtuals" type="PopupPanel" node_paths=PackedStringArray("tree", "accept_button", "cancel_button", "check_generate_at_line", "interface_generate_button", "virtual_generate_button", "order_button", "public_button", "protected_button", "private_button", "interface_button")]
 title = "GD Override Functions"
 initial_position = 4
-size = Vector2i(512, 512)
+size = Vector2i(526, 512)
 visible = true
 transient_to_focused = true
 unresizable = false
@@ -44,7 +44,7 @@ interface_button = NodePath("Container/HBoxContainer/interface_btn")
 [node name="Container" type="VBoxContainer" parent="."]
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 508.0
+offset_right = 522.0
 offset_bottom = 508.0
 
 [node name="TittleContainer" type="PanelContainer" parent="Container"]
@@ -109,7 +109,6 @@ theme_override_styles/pressed = ExtResource("3_bpsl1")
 toggle_mode = true
 icon = ExtResource("2_63hnu")
 icon_alignment = 1
-expand_icon = true
 
 [node name="protected_btn" type="Button" parent="Container/HBoxContainer"]
 custom_minimum_size = Vector2(16, 16)
@@ -125,7 +124,6 @@ toggle_mode = true
 button_pressed = true
 icon = ExtResource("2_iq5ej")
 icon_alignment = 1
-expand_icon = true
 
 [node name="private_btn" type="Button" parent="Container/HBoxContainer"]
 custom_minimum_size = Vector2(16, 16)
@@ -140,9 +138,9 @@ theme_override_styles/pressed = ExtResource("3_bpsl1")
 toggle_mode = true
 icon = ExtResource("4_7bskm")
 icon_alignment = 1
-expand_icon = true
 
 [node name="interface_btn" type="Button" parent="Container/HBoxContainer"]
+custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 tooltip_text = "Interfaces.
 This include all interface methods.
@@ -164,6 +162,7 @@ theme_override_styles/pressed = ExtResource("3_bpsl1")
 toggle_mode = true
 button_pressed = true
 icon = ExtResource("5_7bskm")
+icon_alignment = 1
 
 [node name="Tree" type="Tree" parent="Container"]
 custom_minimum_size = Vector2(128, 256)
