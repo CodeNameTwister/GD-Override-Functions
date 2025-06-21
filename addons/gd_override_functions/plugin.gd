@@ -20,5 +20,6 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	remove_context_menu_plugin(popup_virtual_functions)
 	remove_context_menu_plugin(popup_virtual_functions_code)
+	
 	popup_virtual_functions = null
 	popup_virtual_functions_code = null

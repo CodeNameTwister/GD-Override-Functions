@@ -14,6 +14,7 @@ func _notification(what: int) -> void:
 		var root : Node = Engine.get_main_loop().root
 		var virtual_popup : Popup = root.get_node_or_null("_VPOPUP_")
 		if is_instance_valid(virtual_popup) and !virtual_popup.is_queued_for_deletion():
+			virtual_popup.config_update(true)
 			virtual_popup.queue_free()
 
 func callback(input : Object) -> void:

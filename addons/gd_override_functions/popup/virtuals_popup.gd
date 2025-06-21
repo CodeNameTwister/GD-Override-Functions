@@ -334,9 +334,16 @@ func _on_settings_change() -> void:
 
 #region init
 func _ready() -> void:
+	var w_size : Vector2 =  DisplayServer.window_get_size()
+	if w_size != Vector2.ZERO:
+		size = w_size * 0.4
+		
+	config_update(false)
+	
 	if !Engine.is_editor_hint():
 		#Component created for be used in editor mode, so testing is invoke in non editor mode.
 		_testing()
+
 
 func _testing() -> void:
 	await get_tree().process_frame
@@ -524,7 +531,29 @@ func _on_generate_interface_pressed() -> void:
 func _on_check_generate_at_line(toggled : bool) -> void:
 	_generate_at_end_line = toggled
 
-func _init() -> void:
+func config_update(save : bool = false) -> void:
+	const SETTING : String = "plugin/gd_override_functions/initial_size"
+	const SETTING_CHECK : String = "plugin/gd_override_functions/save_size_on_exit"
+	var editor : EditorSettings = EditorInterface.get_editor_settings()
+	
+	size.x = maxf(size.x, 512)
+	size.y = maxf(size.y, 512)
+	
+	if editor:
+		if !editor.has_setting(SETTING_CHECK):
+			editor.set_setting(SETTING_CHECK, true)
+			
+		if !editor.has_setting(SETTING):
+			editor.set_setting(SETTING, (size as Vector2i))
+			return
+			
+		if save:
+			if editor.get_setting(SETTING_CHECK) == true:
+				editor.set_setting(SETTING, (size as Vector2i))
+		else:
+			size = editor.get_setting(SETTING)
+
+func _init() -> void:	
 	_private_begin_equal_protected = _char_private_function.begins_with(_char_virtual_function)
 	if !is_node_ready():
 		await ready
@@ -823,10 +852,13 @@ func _make(funcs : Dictionary) -> void:
 		__iterate_metada(buffer, _last_script, funcs, ClassDB.class_get_method_list(type_base), __iterate_metada(buffer, _last_script, funcs, _last_script.get_script_method_list(), 0),)
 	else:
 		__iterate_metada(buffer, _last_script, funcs, _last_script.get_script_method_list(), 0)
-	hide()
+	_on_cancel_button()
+
+
 
 func _on_cancel_button() -> void:
 	hide()
+	config_update(true)
 
 func _on_tree_multi_selected(_item: TreeItem, _column: int, _selected: bool) -> void:
 	_update_gui()
