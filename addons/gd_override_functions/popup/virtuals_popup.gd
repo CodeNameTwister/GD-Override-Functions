@@ -336,7 +336,7 @@ func _on_settings_change() -> void:
 func _ready() -> void:
 	var w_size : Vector2 =  DisplayServer.window_get_size()
 	if w_size != Vector2.ZERO:
-		size = w_size * 0.4
+		size = w_size * 0.6
 		
 	config_update(false)
 	

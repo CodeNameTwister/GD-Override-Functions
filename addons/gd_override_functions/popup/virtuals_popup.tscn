@@ -44,7 +44,7 @@ interface_button = NodePath("Container/HBoxContainer/interface_btn")
 [node name="Container" type="VBoxContainer" parent="."]
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 737.0
+offset_right = 508.0
 offset_bottom = 508.0
 
 [node name="TittleContainer" type="PanelContainer" parent="Container"]
