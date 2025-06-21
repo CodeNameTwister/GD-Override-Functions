@@ -331,7 +331,14 @@ func _on_settings_change() -> void:
 			_last_filter = FILTER_TYPE.REVERSE
 		else:
 			_last_filter = FILTER_TYPE.DEFAULT
-
+			
+	if "plugin/gd_override_functions/initial_size" in changes:
+		var _size : Variant = editor.get_setting("plugin/gd_override_functions/initial_size")
+		if _size is Vector2 or _size is Vector2i:
+			size = _size
+			size.x = maxf(size.x, 512.0)
+			size.y = maxf(size.y, 512.0)
+		
 #region init
 func _ready() -> void:
 	var w_size : Vector2 =  DisplayServer.window_get_size()
