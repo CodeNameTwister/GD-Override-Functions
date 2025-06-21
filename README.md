@@ -78,6 +78,13 @@ my_file.gd
 >[!NOTE]
 >Native classes were excluded because they could be confused with interfaces.
 
+# Special Thanks 📜 
+This section lists users who have contributed to improving the quality of this project.
+
+[@kyrosle](https://github.com/kyrosle)
+
+
+#
 Copyrights (c) CodeNameTwister. See [LICENSE](LICENSE) for details.
 
 [godot engine]: https://godotengine.org/
